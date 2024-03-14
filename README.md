@@ -1,93 +1,131 @@
 # TKOM24L
 
+### Paweł Rogóż
 
+#### Temat projektu:
+Język z wbudowanym typem słownika z określoną kolejnością elementów. Kolejność elementów w słowniku jest tożsama z kolejnością wstawiania do niego elementów. Możliwe są podstawowe operacje na słowniku (dodawanie, usuwanie, wyszukiwanie elementów wg klucza, sprawdzanie, czy dany klucz znajduje się w słowniku itd.), iterowanie po elementach oraz wykonywanie na słowniku zapytań w stylu LINQ.
 
-## Getting started
+###### Cechy języka:
+ - język typowany statycznie, silnie
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+#### Założenia:
+ - język zostanie zaimplementowany w języku Python
+ - język posiada trzy wbudowane klasy: ```List``` , ```Pair``` , ```Dict``` 
+ - typy języka: ```string```, ```int```, ```bool```, ```float```
+ - język udostępnia instrukcję warunkową ```if else```
+ - język udostępnia pętlę ```while```
+ - każdy program musi posiadać funkcję ```main```
+ - język pozwala na tworzenie oraz wywoływanie funkcji (posiada typ void dla funkcji, które nie zwracają żadnych wartości)
+ - język pozwala na tworzenie komentarzy
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
-
+#### Klasa ```List```
+ - tworzenie instancji klasy:
 ```
-cd existing_repo
-git remote add origin https://gitlab-stud.elka.pw.edu.pl/TKOM_24L_AM/Pawel_Rogoz/tkom24l.git
-git branch -M main
-git push -uf origin main
+List<int> przykladowa_lista = new List();
+```
+ - instancja może też zostać zainicjowana wraz z początkowymi wartościami:
+```
+List<int> przykladowa_lista = new List(1,2,3);
+```
+- metody klasy:
+1. length() - metoda zwraca długość listy
+2. forEach() - metoda pozwala na iterowanie po wszystkich elementach listy
+3. push() - dodaje element na koniec listy
+4. pop() - usuwa element z końca listy
+
+#### Klasa ```Pair```
+ - tworzenie instancji klasy:
+```
+Pair<string,int> przykladowa_para = new Pair("age", 10);
+```
+ - instancja musi zostać zainicjowana wraz z początkowymi wartościami
+ - metody klasy:
+1. key() - zwraca klucz pary
+2. value() - zwraca wartość pary
+
+#### Klasa ```Dict```
+ - tworzenie instancji klasy:
+```
+Dict<string,int> przykladowy_slownik = new Dict();
+```
+ - instancja może też zostać zainicjowana wraz w początkowymi wartościami:
+ ```
+ Dict<string,int> przykladowy_slownik = new Dict("age": 10);
+ ```
+ - metody klasy:
+<!-- 1. keys() - zwraca wszystkie klucze ze słownika w formie listy
+2. values() - zwraca wszystkie wartości ze słownika w formie listy
+3. add() - dodaje nową parę klucz-wartość do słownika
+4. remove() - usuwa parę ze słownika na podstawie podanego klucza
+5. forEach() - iterowanie po elementach słownika
+6. isKey() - sprawdzenie, czy dany klucz znajduje się w słowniku -->
+
+|   Metoda    | Opis    |   Parametry wywołania |   Typ zwracanej wartości    |
+|   :---    |   :---    |   :---    |   :---    |
+| keys()      | Zwraca wszystkie klucze występujące w słowniku       | brak   | List
+| values()   | Zwraca wszystkie wartości występujące w słowniku         | brak | List |
+| add()   | Dodaje nową parę klucz-wartość do słownika | Pair<x,y> para | brak |
+| remove()   | Usuwa parę ze słownika | klucz, np: 1 | brak |
+| forEach()   | Iterowanie po parach występujących w słowniku| funkcja, która ma być wywołana na danej parze | Zgodna z typem funkcji podanej w parametrze wywołania |
+| isKey()   | Sprawdzenie, czy dany klucz znajduje się w słowniku | klucz, np: 1 | bool |
+
+#### Sposób uruchomienia
+Program będzie aplikacją konsolową, jego argumentem wywołania jest ścieżka do pliku zawierającego kod źródłowy
+```
+python3 interpreter.py kod_zdrodlowy.txt
 ```
 
-## Integrate with your tools
+#### Obsługa błędów
+Program będzie zwracać kod błędu, oraz wiersz i kolumnę, w których ten błąd występuje:
 
-- [ ] [Set up project integrations](https://gitlab-stud.elka.pw.edu.pl/TKOM_24L_AM/Pawel_Rogoz/tkom24l/-/settings/integrations)
+Przykład:
+```
+ERROR: Can't assign 'string' for type 'int', at: line 10, column 3
+```
 
-## Collaborate with your team
+#### Przykładowy kod źródłowy
+```
+void wypiszPare(Pair<string,int> para)
+{
+    print("Klucz: " + para.key() + ", wartość: " + para.value());
+}
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+int main()
+{
+    // typy zmiennych w języku
+    int wiek = 10;
+    float pi = 3.14;
+    bool czyJestKluczem = true;
+    string imie = "Jan";
 
-## Test and Deploy
+    // utworzenie nowej pary
+    Pair<string,int> osobaPierwsza = new Pair("Jan", 17);
+    Pair<string,int> osobaDruga = new Pair("Jakub", 34);
+    Pair<string,int> osobaTrzecia = new Pair("Maciej", 46);
 
-Use the built-in continuous integration in GitLab.
+    // utworzenie nowego słownika
+    Dict wiekOsob = new Dict(osobaPierwsza, osobaDruga);
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+    // dodawanie elementów do słownika
+    wiekOsob.add(osobaTrzecia);
 
-***
+    // usuwanie elementów ze słownika
+    wiekOsob.remove("Jan");
 
-# Editing this README
+    // metody: keys() oraz values()
+    List<string> imiona = wiekOsob.keys();
+    List<string> wiek = wiekOsob.values();
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+    // metoda forEach()
+    wiekOsob.forEach(wypiszPare());
 
-## Suggestions for a good README
+    while (wiek < 15)
+    {
+        wiek = wiek + 1;
+    }
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+    return 0;
+}
+```
 
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+#### Formalna specyfikacja i składnia (EBNF):
