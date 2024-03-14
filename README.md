@@ -99,25 +99,25 @@ int main()
     string imie = "Jan";
 
     // utworzenie nowej pary
-    Pair<string,int> osobaPierwsza = new Pair("Jan", 17);
-    Pair<string,int> osobaDruga = new Pair("Jakub", 34);
-    Pair<string,int> osobaTrzecia = new Pair("Maciej", 46);
+    Pair<string,string> krajPierwszy = new Pair("Anglia", "Londyn");
+    Pair<string,string> krajDrugi = new Pair("Polska", "Warszawa");
+    Pair<string,string> krajTrzeci = new Pair("Niemcy", "Berlin");
 
     // utworzenie nowego słownika
-    Dict wiekOsob = new Dict(osobaPierwsza, osobaDruga);
+    Dict<string,string> stoliceKrajow = new Dict(krajPierwszy, krajDrugi);
 
     // dodawanie elementów do słownika
-    wiekOsob.add(osobaTrzecia);
+    stoliceKrajow.add(krajTrzeci);
 
     // usuwanie elementów ze słownika
-    wiekOsob.remove("Jan");
+    stoliceKrajow.remove("Anglia");
 
     // metody: keys() oraz values()
-    List<string> imiona = wiekOsob.keys();
-    List<string> wiek = wiekOsob.values();
+    List<string> kraje = stolice.keys();
+    List<string> stolice = stolice.values();
 
     // metoda forEach()
-    wiekOsob.forEach(wypiszPare());
+    stoliceKrajow.forEach(wypiszPanstwo());
 
     while (wiek < 15)
     {
@@ -129,3 +129,69 @@ int main()
 ```
 
 #### Formalna specyfikacja i składnia (EBNF):
+##### Część składniowa
+```
+program = { comment | funcDeclaration }
+funcDeclaration = funcType, id, "(", [ funcArgument, { ",", funcArgument } ], ")", body
+body = "{", { statement }, "}"
+funcArgument = type, id
+funcType = type
+statement = { declaration
+            | functionCall
+            | return
+            | comment
+            | ifStatement
+            | whileLoop
+            | print
+            | classOperation
+            | linqOperation
+            }
+declaration = type, id, [ assignment ], ";"
+assignment = "=", value
+functionCall = id, "(", [ funcParams, { ",", funcParams } ], ")"
+funcParams = id | paramDeclaration
+paramDeclaration = type, id, assignment
+ifStatement = "if", condition, body, { "else if", condition, body }, [ "else", condition, body]
+condition = "(", expression, ")"
+expression = logicalExpression, [ { addConditionOperator, logicalExpression } ]
+logicalExpression = id | value, [ logicalOperator, id | value ]
+whileLoop = "while", condition, body
+comment = "//", { letter }
+return = "return", value, ";"
+value = string | floatNumber | number | bool | id | linqOperation
+linqOperation = "from", linqExpression, [ "where", linqExpression ], [ "orderby", linqExpression ], "select", linqExpression
+linqExpression = 
+classOperation = id, ".", classMethod
+classMethod = classMethodName, "(", [ classMethodParams, { ",", classMethodParams} ] ,")"
+classMethodParams = funcParams | funcDeclaration
+id = letter, { letter }
+
+print = "print", "(", value, [ { "+", value } ], ")"
+
+```
+
+##### Część leksykalna
+```
+type = "int"
+    | "float"
+    | "string"
+    | "bool"
+    | classType
+classType = className, "<", classParam, [ "," classParam ], ">"
+className = "Dict" | "List" | "Pair"
+classMethodName = "forEach" | "length" | "push" | "pop" | "key" | "value" | "keys" | "values" | "add" | "remove" | "isKey"
+functionType = "void" | type
+logicalOperator = "<"
+                | ">"
+                | "<="
+                | ">="
+                | "=="
+addConditionOperator = "&&" | "||"
+bool = "true" | "false"
+nonZeroDigit = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+digit = "0" | nonZeroDigit
+letter = "a-z" | "A-Z"
+number = nonZeroDigit, { digit }
+floatNumber = ( "0" | nonZeroDigit, { digit } ), ".", digit, { digit }
+
+```
