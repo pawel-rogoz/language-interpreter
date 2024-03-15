@@ -135,7 +135,6 @@ program = { comment | funcDeclaration }
 funcDeclaration = funcType, id, "(", [ funcArgument, { ",", funcArgument } ], ")", body
 body = "{", { statement }, "}"
 funcArgument = type, id
-funcType = type
 statement = { declaration
             | functionCall
             | return
@@ -143,10 +142,9 @@ statement = { declaration
             | ifStatement
             | whileLoop
             | print
-            | classOperation
-            | linqOperation
+            | classOperation, semicolonWithComment
             }
-declaration = type, id, [ assignment ], ";"
+declaration = type, id, [ assignment ], semicolonWithComment
 assignment = "=", value
 functionCall = id, "(", [ funcParams, { ",", funcParams } ], ")"
 funcParams = id | paramDeclaration
@@ -157,17 +155,17 @@ expression = logicalExpression, [ { addConditionOperator, logicalExpression } ]
 logicalExpression = id | value, [ logicalOperator, id | value ]
 whileLoop = "while", condition, body
 comment = "//", { letter }
-return = "return", value, ";"
-value = string | floatNumber | number | bool | id | linqOperation
-linqOperation = "from", linqExpression, [ "where", linqExpression ], [ "orderby", linqExpression ], "select", linqExpression
-linqExpression = 
+return = "return", value, semicolonWithComment
+value = string | floatNumber | number | bool | id | linqOperation | classOperation
+linqOperation = "from", linqFrom, [ "where", linqExpression ], [ "orderby", linqExpression ], "select", linqExpression, semicolonWithComment
+linqExpression =
+linqFrom = id, [ "in", ]
 classOperation = id, ".", classMethod
 classMethod = classMethodName, "(", [ classMethodParams, { ",", classMethodParams} ] ,")"
 classMethodParams = funcParams | funcDeclaration
 id = letter, { letter }
-
-print = "print", "(", value, [ { "+", value } ], ")"
-
+print = "print", "(", value, [ { "+", value } ], ")", semicolonWithComment
+semicolonWithComment = ";", [ comment ]
 ```
 
 ##### Część leksykalna
@@ -180,7 +178,7 @@ type = "int"
 classType = className, "<", classParam, [ "," classParam ], ">"
 className = "Dict" | "List" | "Pair"
 classMethodName = "forEach" | "length" | "push" | "pop" | "key" | "value" | "keys" | "values" | "add" | "remove" | "isKey"
-functionType = "void" | type
+funcType = "void" | type
 logicalOperator = "<"
                 | ">"
                 | "<="
@@ -193,5 +191,5 @@ digit = "0" | nonZeroDigit
 letter = "a-z" | "A-Z"
 number = nonZeroDigit, { digit }
 floatNumber = ( "0" | nonZeroDigit, { digit } ), ".", digit, { digit }
-
+string = '"', { letter | digit }, '"'
 ```
