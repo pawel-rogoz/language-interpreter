@@ -53,12 +53,6 @@ Dict<string,int> przykladowy_slownik = new Dict();
  Dict<string,int> przykladowy_slownik = new Dict("age": 10);
  ```
  - metody klasy:
-<!-- 1. keys() - zwraca wszystkie klucze ze słownika w formie listy
-2. values() - zwraca wszystkie wartości ze słownika w formie listy
-3. add() - dodaje nową parę klucz-wartość do słownika
-4. remove() - usuwa parę ze słownika na podstawie podanego klucza
-5. forEach() - iterowanie po elementach słownika
-6. isKey() - sprawdzenie, czy dany klucz znajduje się w słowniku -->
 
 |   Metoda    | Opis    |   Parametry wywołania |   Typ zwracanej wartości    |
 |   :---    |   :---    |   :---    |   :---    |
@@ -68,6 +62,7 @@ Dict<string,int> przykladowy_slownik = new Dict();
 | remove()   | Usuwa parę ze słownika | klucz, np: 1 | brak |
 | forEach()   | Iterowanie po parach występujących w słowniku| funkcja, która ma być wywołana na danej parze | Zgodna z typem funkcji podanej w parametrze wywołania |
 | isKey()   | Sprawdzenie, czy dany klucz znajduje się w słowniku | klucz, np: 1 | bool |
+| length() | Zwraca ilość elementów w słowniku | brak | Int |
 
 #### Sposób uruchomienia
 Program będzie aplikacją konsolową, jego argumentem wywołania jest ścieżka do pliku zawierającego kod źródłowy
@@ -83,7 +78,8 @@ Przykład:
 ERROR: Can't assign 'string' for type 'int', at: line 10, column 3
 ```
 
-#### Przykładowy kod źródłowy
+#### Przykładowe kody źródłowe
+* Podstawowe operacje
 ```
 void wypiszPare(Pair<string,int> para)
 {
@@ -128,44 +124,93 @@ int main()
 }
 ```
 
+* Rzutowanie Typów
+```
+int main()
+{
+    int price = 3;
+    float fullPrice = (float) price; // fullPrice = 3.00
+}
+```
+
+* Zmienne przekazywane przez wartość
+```
+// zmienne przekazywane przez wartość
+int addOne(int number)
+{
+    number = number + 1;
+}
+
+int main()
+{
+    int number = 3;
+    addOne(number);
+    print(number); // 3, brak zmian
+}
+```
+
+* Funkcje rekurencyjne
+```
+int fibonacci(int n)
+{
+    if (n < 3)
+    {
+        return 1;
+    }
+
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+int main()
+{
+    fib(5);
+}
+```
 #### Formalna specyfikacja i składnia (EBNF):
 ##### Część składniowa
 ```
-program = { comment | funcDeclaration }
-funcDeclaration = funcType, id, "(", [ funcArgument, { ",", funcArgument } ], ")", body
+program = { functionDefinition }
+
+functionDefinition = functionType, id, "(", [ functionArgument, { ",", functionArgument } ], ")", body
+
 body = "{", { statement }, "}"
-funcArgument = type, id
-statement = { declaration
-            | functionCall
+functionArgument = declaration
+
+statement = { initialization
+            | assignmentOrCall
             | return
-            | comment
             | ifStatement
             | whileLoop
-            | print
-            | classOperation, semicolonWithComment
             }
-declaration = type, id, [ assignment ], semicolonWithComment
-assignment = "=", value
-functionCall = id, "(", [ funcParams, { ",", funcParams } ], ")"
-funcParams = id | paramDeclaration
-paramDeclaration = type, id, assignment
-ifStatement = "if", condition, body, { "else if", condition, body }, [ "else", condition, body]
-condition = "(", expression, ")"
-expression = logicalExpression, [ { addConditionOperator, logicalExpression } ]
-logicalExpression = id | value, [ logicalOperator, id | value ]
-whileLoop = "while", condition, body
-comment = "//", { letter }
-return = "return", value, semicolonWithComment
-value = string | floatNumber | number | bool | id | linqOperation | classOperation
-linqOperation = "from", linqFrom, [ "where", linqExpression ], [ "orderby", linqExpression ], "select", linqExpression, semicolonWithComment
-linqExpression =
-linqFrom = id, [ "in", ]
-classOperation = id, ".", classMethod
-classMethod = classMethodName, "(", [ classMethodParams, { ",", classMethodParams} ] ,")"
-classMethodParams = funcParams | funcDeclaration
+
+initialization = declaration, [ assignment ], ";"
+declaration = type, id
+assignment = "=", ( expression | classInitialization )
+classInitialization = "new", className, "(", arguments, ")"
+
+assignmentOrCall = id, ( ( "(", arguments, ")" | { ".", id, "(", arguments, ")" } ) | "=" expression ), ";"
+
+ifStatement = "if", "(", expression, ")", body, { "else if", "(", expression, ")", body }, [ "else", body]
+whileLoop = "while", "(", expression, ")", body
+return = "return", expression, ";"
+
+expression = conjuction, { "||", conjuction }
+conjuction = relationTerm, { "&&", relationTerm }
+relationTerm = additiveTerm, [ relationOperator, additiveTerm ]
+additiveTerm = multiplicativeTerm, { ( "+" | "-" ), multiplicativeTerm }
+multiplicativeTerm = unaryApplication, { ( "*" | "/" ), unaryApplication }
+unaryApplication = [ ( "-" | "!" ) ], castingTerm
+castingTerm = [ "(", type ,")" ], term
+term = literal | idOrCall | "(", expression, ")" | linqOperation
+
+literal = bool | string | number | floatNumber
+idOrCall = id, [ ( "(", arguments, ")" | { ".", id, "(", arguments, ")" } ) ]
+
+arguments = [ expression, { ",", expression } ]
+
+linqOperation = "from", expression, [ "where", expression ], [ "orderby", expression ], "select", expression, ";"
+
 id = letter, { letter }
-print = "print", "(", value, [ { "+", value } ], ")", semicolonWithComment
-semicolonWithComment = ";", [ comment ]
 ```
 
 ##### Część leksykalna
@@ -175,16 +220,11 @@ type = "int"
     | "string"
     | "bool"
     | classType
-classType = className, "<", classParam, [ "," classParam ], ">"
+classType = className, "<", type, [ "," type ], ">"
 className = "Dict" | "List" | "Pair"
-classMethodName = "forEach" | "length" | "push" | "pop" | "key" | "value" | "keys" | "values" | "add" | "remove" | "isKey"
 funcType = "void" | type
-logicalOperator = "<"
-                | ">"
-                | "<="
-                | ">="
-                | "=="
-addConditionOperator = "&&" | "||"
+relationOperator = ">", "<", ">=", "<=", "==", "!="
+
 bool = "true" | "false"
 nonZeroDigit = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
 digit = "0" | nonZeroDigit
@@ -193,3 +233,84 @@ number = nonZeroDigit, { digit }
 floatNumber = ( "0" | nonZeroDigit, { digit } ), ".", digit, { digit }
 string = '"', { letter | digit }, '"'
 ```
+
+#### Priorytety Operatorów
+
+| Operator | Priorytet | Łączność |
+| ------ | ------ | ----- |
+| () | 7 | od lewej |
+| ! | 6 | brak |
+| - (unarnie) | 6 | brak |
+| * | 5 | od lewej |
+| / | 5 | od lewej |
+| + | 4 | od lewej |
+| - (binarnie) | 4 | od lewej |
+| > | 3 | brak |
+| < | 3 | brak |
+| >= | 3 | brak |
+| <= | 3 | brak |
+| == | 3 | brak |
+| != | 3 | brak |
+| && | 2 | od lewej |
+| || | 1 | od lewej |
+
+#### Rzutowanie Typów
+| Typ 1 | Typ 2 | Operacja | Typ wynikowy |
+| ------ | ------ | ----- | ----- |
+| string | int | + | string |
+| string | float | + | string |
+| string | bool | + | string |
+| int | float | + | float
+
+#### Tokeny
+Rodzaje tokenów:
+* Operatory Porównania
+    * ```Greater```
+    * ```Less```
+    * ```GreaterEqual```
+    * ```LessEqual```
+    * ```Equal```
+    * ```NotEqual```
+* Operatory Arytmetyczne
+    * ```Plus```
+    * ```Minus```
+    * ```Multiply```
+    * ```Divide```
+* Operatory Logiczne
+    * ```And```
+    * ```Or```
+    * ```Negate```
+* Nawiasowanie
+    * ```RoundOpen```
+    * ```RoundClose```
+    * ```CurlyOpen```
+    * ```CurlyClose```
+* Słowa Kluczowe
+    * ```If```
+    * ```Else```
+    * ```While```
+    * ```Return```
+    * ```Select```
+    * ```From```
+    * ```Where```
+* Typy
+    * ```Int```
+    * ```Float```
+    * ```Bool```
+    * ```String```
+    * ```Pair```
+    * ```List```
+    * ```Dict```
+* Przypisanie
+    * ```Assign```
+* Podział
+    * ```Colon```
+    * ```Semicolon```
+    * ```Comma```
+* Wartości i typy
+    * ```Id```
+    * ```Comment```
+    * ```StringValue```
+    * ```IntValue```
+    * ```FloatValue```
+    * ```BoolValue```
