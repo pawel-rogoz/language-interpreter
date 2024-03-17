@@ -17,6 +17,8 @@ Język z wbudowanym typem słownika z określoną kolejnością elementów. Kole
  - każdy program musi posiadać funkcję ```main```
  - język pozwala na tworzenie oraz wywoływanie funkcji (posiada typ void dla funkcji, które nie zwracają żadnych wartości)
  - język pozwala na tworzenie komentarzy
+ - maksymalna długość stringa: 256
+ - maksymalna wielkość liczby: 10 cyfr
 
 #### Klasa ```List```
  - tworzenie instancji klasy:
@@ -32,6 +34,11 @@ List<int> przykladowa_lista = new List(1,2,3);
 2. forEach() - metoda pozwala na iterowanie po wszystkich elementach listy
 3. push() - dodaje element na koniec listy
 4. pop() - usuwa element z końca listy
+5. [ index ] - klasa umożliwia pobieranie / ustawianie wartości dla danego indeksu
+```
+int number = przykladowa_lista[0]; // number: 1
+przykladowa_lista[0] = 2; // przykladowa_lista: 2,2,3
+```
 
 #### Klasa ```Pair```
  - tworzenie instancji klasy:
@@ -63,6 +70,11 @@ Dict<string,int> przykladowy_slownik = new Dict();
 | forEach()   | Iterowanie po parach występujących w słowniku| funkcja, która ma być wywołana na danej parze | Zgodna z typem funkcji podanej w parametrze wywołania |
 | isKey()   | Sprawdzenie, czy dany klucz znajduje się w słowniku | klucz, np: 1 | bool |
 | length() | Zwraca ilość elementów w słowniku | brak | Int |
+| [key] | Pozwala na pobieranie i ustawianie wartości znajdujących się w słowniku pod danym kluczem | key | Zgodna z typem wartości |
+```
+int age = przykladowy_slownik["age"]; // age: 10
+przykladowy_slownik["age"] = 20; // przykladowy_slownik: ("age": 20)
+```
 
 #### Sposób uruchomienia
 Program będzie aplikacją konsolową, jego argumentem wywołania jest ścieżka do pliku zawierającego kod źródłowy
@@ -76,6 +88,100 @@ Program będzie zwracać kod błędu, oraz wiersz i kolumnę, w których ten bł
 Przykład:
 ```
 ERROR: Can't assign 'string' for type 'int', at: line 10, column 3
+```
+Przykładowe błędy:
+* Pobieranie / ustawianie przez indeks
+```
+int main()
+{
+    string xyz = "xyz";
+    List<int> przykladowa_lista = new List(1,2,3,4,5);
+
+    przykladowa_lista[xyz] = 10;
+}
+```
+
+```
+ERROR: index must be type 'in', at line 6, column 19
+```
+
+* Długość cyfry większa od 10
+```
+int main()
+{
+    int number = 10000000000;
+}
+```
+
+```
+ERROR: int too big (max 999999999), at line 3, column 14
+```
+
+* Długość stringa wieksza od 256
+```
+int main()
+{
+    string name = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+}
+```
+
+```
+ERROR: string too long (max 256), at line 3, column 10
+```
+
+* Inicjalizacja z wartością innego typu
+```
+int main()
+{
+    string name = 1;
+}
+```
+
+```
+ERROR: Can't assign type 'int' for 'string', at line 3, column 14
+```
+
+* Redefinicja zmiennych
+```
+int main()
+{
+    string name = "Anna";
+    name = 1;
+}
+```
+
+```
+ERROR: Can't assign type 'int' for 'string', at line 4, column 7
+```
+
+* Wywołanie funkcji ze zbyt małą liczbą argumentów
+```
+int addOne(int number)
+{
+    number += 1;
+}
+
+int main()
+{
+    addOne();
+}
+```
+
+```
+ERROR: addOne takes 1 argument, 0 given, at line 8, column 0
+```
+
+* Próba rzutowania typów niemożliwych do zrzutowania
+```
+int main()
+{
+    string name = "Anna";
+    int number = (int) name;
+}
+```
+
+```
+ERROR: Can't cast string to int, at line 4, column 20
 ```
 
 #### Przykładowe kody źródłowe
@@ -133,6 +239,24 @@ int main()
 }
 ```
 
+* Widoczność zmiennych
+```
+int main()
+{
+    int number = 3;
+
+    if (true)
+    {
+        int age = 10;
+        number = number + 1;
+    }
+
+    print(age); // ERROR: 'age' is not defined
+    print(number); // 4
+    
+}
+```
+
 * Zmienne przekazywane przez wartość
 ```
 // zmienne przekazywane przez wartość
@@ -146,6 +270,18 @@ int main()
     int number = 3;
     addOne(number);
     print(number); // 3, brak zmian
+}
+```
+
+* Zmienne przekazywane przez wartość - Obiekty
+```
+int main()
+{
+    Pair<string,string> krajPierwszy = new Pair("Anglia", "Londyn");
+
+    Dict<string,string> stoliceKrajow = new Dict(krajPierwszy);
+
+    stoliceKrajow["Anglia"] = "XYZ"; // krajPierwszy["Anglia"] = Londyn
 }
 ```
 
@@ -166,6 +302,7 @@ int main()
     fib(5);
 }
 ```
+
 #### Formalna specyfikacja i składnia (EBNF):
 ##### Część składniowa
 ```
@@ -188,7 +325,7 @@ declaration = type, id
 assignment = "=", ( expression | classInitialization )
 classInitialization = "new", className, "(", arguments, ")"
 
-assignmentOrCall = id, ( ( "(", arguments, ")" | { ".", id, "(", arguments, ")" } ) | "=" expression ), ";"
+assignmentOrCall = id, [ "[", expression, "]" ], ( ( "(", arguments, ")" | { ".", id, "(", arguments, ")" } ) | "=" expression ), ";"
 
 ifStatement = "if", "(", expression, ")", body, { "else if", "(", expression, ")", body }, [ "else", body]
 whileLoop = "while", "(", expression, ")", body
@@ -199,8 +336,8 @@ conjuction = relationTerm, { "&&", relationTerm }
 relationTerm = additiveTerm, [ relationOperator, additiveTerm ]
 additiveTerm = multiplicativeTerm, { ( "+" | "-" ), multiplicativeTerm }
 multiplicativeTerm = unaryApplication, { ( "*" | "/" ), unaryApplication }
-unaryApplication = [ ( "-" | "!" ) ], castingTerm
-castingTerm = [ "(", type ,")" ], term
+unaryApplication = [ ( "-" | "!" ) ], castingIndexingTerm
+castingIndexingTerm = [ "(", type ,")" ], term, [ "[", expression, "]" ]
 term = literal | idOrCall | "(", expression, ")" | linqOperation
 
 literal = bool | string | number | floatNumber
@@ -238,7 +375,8 @@ string = '"', { letter | digit }, '"'
 
 | Operator | Priorytet | Łączność |
 | ------ | ------ | ----- |
-| () | 7 | od lewej |
+| () | 8 | od lewej |
+| [] | 7 | od lewej |
 | ! | 6 | brak |
 | - (unarnie) | 6 | brak |
 | * | 5 | od lewej |
@@ -260,7 +398,7 @@ string = '"', { letter | digit }, '"'
 | string | int | + | string |
 | string | float | + | string |
 | string | bool | + | string |
-| int | float | + | float
+| int | float | +-*/ | float
 
 #### Tokeny
 Rodzaje tokenów:
@@ -285,6 +423,10 @@ Rodzaje tokenów:
     * ```RoundClose```
     * ```CurlyOpen```
     * ```CurlyClose```
+    * ```SquareOpen```
+    * ```SquareClose```
+    * ```GenericOpen```, ('<')
+    * ```GenericClose```, ('>')
 * Słowa Kluczowe
     * ```If```
     * ```Else```
@@ -293,6 +435,12 @@ Rodzaje tokenów:
     * ```Select```
     * ```From```
     * ```Where```
+    * ```New```
+* Operacje LINQ
+    * ```Select```
+    * ```Where```
+    * ```From```
+    * ```OrderBy```
 * Typy
     * ```Int```
     * ```Float```
