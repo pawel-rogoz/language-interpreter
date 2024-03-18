@@ -102,7 +102,7 @@ int main()
 ```
 
 ```
-ERROR: index must be type 'in', at line 6, column 19
+ERROR: index must be type 'int', at line 6, column 19
 ```
 
 * Długość cyfry większa od 10
@@ -196,6 +196,18 @@ int main()
 
 ```
 ERROR: Can't assign 'List' to 'int', at line 5, column 25
+```
+
+* Brak średnika
+```
+int main()
+{
+    string imie = 'Anna'
+}
+```
+
+```
+ERROR: ';' expected, at line 3, column 20
 ```
 
 #### Przykładowe kody źródłowe
