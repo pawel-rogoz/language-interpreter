@@ -1,6 +1,7 @@
 # TKOM24L
-
-### Paweł Rogóż
+Paweł Rogóż
+### Elementy dokumentu
+[[*TOC*]]
 
 #### Temat projektu:
 Język z wbudowanym typem słownika z określoną kolejnością elementów. Kolejność elementów w słowniku jest tożsama z kolejnością wstawiania do niego elementów. Możliwe są podstawowe operacje na słowniku (dodawanie, usuwanie, wyszukiwanie elementów wg klucza, sprawdzanie, czy dany klucz znajduje się w słowniku itd.), iterowanie po elementach oraz wykonywanie na słowniku zapytań w stylu LINQ.
@@ -226,7 +227,13 @@ int main()
     bool czyJestKluczem = true;
     string imie = "Jan";
 
-    // utworzenie nowej pary
+    // rzutowania zmiennych
+    int waga = (int) 85.5; // waga: 85
+    float wagaFloat = (float) waga; //wagaFloat: 85.00
+    int czyJestPuste = (int) true;
+    string numer = (string) 10;
+
+    // utworzenie nowych par
     Pair<string,string> krajPierwszy = new Pair("Anglia", "Londyn");
     Pair<string,string> krajDrugi = new Pair("Polska", "Warszawa");
     Pair<string,string> krajTrzeci = new Pair("Niemcy", "Berlin");
@@ -257,15 +264,19 @@ int main()
 ```
 
 * Rzutowanie Typów
+Tabela pokazująca możliwe sposoby rzutowania typów jest umieszczona niżej
 ```
 int main()
 {
     int price = 3;
     float fullPrice = (float) price; // fullPrice = 3.00
+    fullPrice = 3.45;
+    int backToPrice = (int) fullPrice; // fullPrice = 3
 }
 ```
 
 * Widoczność zmiennych
+Zmienne w pliku mają zakres blokowy, w związku z czym zmienna 'age' nie jest widoczna z poziomu funkcji
 ```
 int main()
 {
@@ -284,9 +295,10 @@ int main()
 ```
 
 * Zmienne przekazywane przez wartość
+Jako, że zmienne przekazywane są przez wartość, podanie zmiennej 'number' jako parametr wywołania funkcji addOne nie zmieni jej wartości
 ```
 // zmienne przekazywane przez wartość
-int addOne(int number)
+void addOne(int number)
 {
     number = number + 1;
 }
@@ -299,7 +311,8 @@ int main()
 }
 ```
 
-* Zmienne przekazywane przez wartość - Obiekty
+* Zmienne niemutowalne
+Przykład poniżej ukazuje, że zmiana wartości dla klucza "Anglia" nie zmieni wartości zapisanej w słowniku stoliceKrajow
 ```
 int main()
 {
@@ -329,7 +342,8 @@ int main()
 }
 ```
 
-* Operacje LINQ - WHERE
+* Operacje LINQ - WHERE, List
+Operacje LINQ można używać tylko do przypisania wartości do zmiennej. Użycie słów kluczowych WHERE, oraz ORDERBY jest opcjonalne, w przeciwieństwie do SELECT i FROM. Operacja zwraca wszystkie elementy spełniające podany warunek
 ```
 int main()
 {
@@ -339,13 +353,43 @@ int main()
 }
 ```
 
-* Operacje LINQ - ORDER BY
+* Operacje LINQ - ORDER BY, List
+Słowa kluczowe ASC, DESC umożliwiają sortowanie wyników rosnąco / malejąco
 ```
 int main()
 {
     List<int> liczby = new List(1, 4, 3, 0, 2);
 
-    List<int> wiekszeOdJeden = select liczba where liczba > 1 orderby liczba from liczby; // 2,3,4
+    List<int> wiekszeOdJeden = select liczba where liczba > 1 orderby liczba ASC from liczby; // 2,3,4
+}
+```
+
+* Operacje LINQ - WHERE, Dict
+```
+int main()
+{
+    Pair<string,int> oszczednosciJacka = new Pair("Jacek", 100);
+    Pair<string,int> oszczednosciMarcina = new Pair("Marcin", 250);
+    Pair<string,int> oszczednosciKrzysztofa = new Pair("Krzysztof", 150);
+
+    Dict<string,int> oszczednosci = new Dict(oszczednosciJacka, oszczednosciMarcina, oszczednosciKrzysztofa);
+
+    List<Pair<string,int>> wiekszeOdDwustu = select pair where pair.value() > 200 from oszczednosci; // [("Marcin", 250)]
+}
+```
+
+* Operacje LINQ - ORDER BY, Dict
+W przypadku słowników operujemy na umieszczonych w nich parach. Możemy zwracać cała parę lub jej składowe (key, value). Wynik zapytania umieszczony jest w nowej liście
+```
+int main()
+{
+    Pair<string,int> oszczednosciJacka = new Pair("Jacek", 100);
+    Pair<string,int> oszczednosciMarcina = new Pair("Marcin", 250);
+    Pair<string,int> oszczednosciKrzysztofa = new Pair("Krzysztof", 150);
+
+    Dict<string,int> oszczednosci = new Dict(oszczednosciJacka, oszczednosciMarcina, oszczednosciKrzysztofa);
+
+    List<Pair<string,int>> wiekszeOdStu = select pair where pair.value() > 200 orderby pair.key() ASC from oszczednosci; // [("Krzysztof", 150), ("Marcin", 250)]
 }
 ```
 
@@ -373,7 +417,7 @@ classInitialization = "new", className, "(", parameters, ")"
 
 assignmentOrCall = idOrCall, [ "=", expression ], ";"
 
-ifStatement = "if", "(", expression, ")", body, { "else if", "(", expression, ")", body }, [ "else", body]
+ifStatement = "if", "(", expression, ")", body, [ { "else if", "(", expression, ")", body }, "else", body ]
 whileLoop = "while", "(", expression, ")", body
 return = "return", expression, ";"
 
@@ -391,7 +435,7 @@ idOrCall = id, [ ( "[", expression, "]" | { [ ".", id ], "(", parameters, ")" } 
 
 parameters = [ expression, { ",", expression } ]
 
-linqOperation = "from", expression, [ "where", expression ], [ "orderby", expression ], "select", expression, ";"
+linqOperation = "from", expression, [ "where", expression ], [ "orderby", expression, ( "ASC", "DESC" ) ], "select", expression, ";"
 
 id = letter, { letter }
 ```
@@ -438,12 +482,13 @@ string = '"', { letter | digit }, '"'
 | \|\| | 1 | od lewej |
 
 #### Rzutowanie Typów
-| Typ 1 | Typ 2 | Operacja | Typ wynikowy |
+| Typ Podstawowy | Typ Rzutowania | Działanie | Przykład
 | ------ | ------ | ----- | ----- |
-| string | int | + | string |
-| string | float | + | string |
-| string | bool | + | string |
-| int | float | +-*/ | float
+| int | string | "{int}" | ```string liczba = (string) 1; // liczba: "1"```|
+| float | string | "{float}" | ```string liczba = (string) 1.5; // liczba: "1.5"```|
+| bool | string | "( true \| false)" | ```string isEmpty = (string) true; // isEmpty: "true"```
+| float | int | ```Math.floor(float)``` | ```int liczba = (int) 1.5; // liczba: 1``` |
+| bool | int | ```0 \| 1``` | ```int liczba = (int) true; //liczba: 1``` |
 
 #### Tokeny
 Rodzaje tokenów:
@@ -470,8 +515,6 @@ Rodzaje tokenów:
     * ```CurlyClose```
     * ```SquareOpen```
     * ```SquareClose```
-    * ```GenericOpen```, ('<')
-    * ```GenericClose```, ('>')
 * Słowa Kluczowe
     * ```If```
     * ```Else```
@@ -486,6 +529,8 @@ Rodzaje tokenów:
     * ```Where```
     * ```From```
     * ```OrderBy```
+    * ```ASC```
+    * ```DESC```
 * Typy
     * ```Int```
     * ```Float```
@@ -497,7 +542,7 @@ Rodzaje tokenów:
 * Przypisanie
     * ```Assign```
 * Podział
-    * ```Colon```
+    * ```Dot```
     * ```Semicolon```
     * ```Comma```
 * Wartości i typy
@@ -507,10 +552,31 @@ Rodzaje tokenów:
     * ```IntValue```
     * ```FloatValue```
     * ```BoolValue```
-* Listy
-    * ```ListValues```
-* Pary
-    * ```PairKey```
-    * ```ValueKey```
-* Słownik
-    * ```DictValues```
+
+Struktura interpretera
+* Tokeny
+    * token zawierać będzie typ tokenu (jeden z powyższych), oraz jego pozycję (wiersz, kolumna, odległość od początku pliku w bajtach)
+* Analiza strumieni wejścia
+    * klasa Reader - pobiera pojedynczo znaki ze źródła
+    * metody klasy:
+        * next() - pobiera następny znak
+        * current() - zwraca obecny znak
+        * position() - zwraca pozycję (wiersz, kolumna, odległość)
+* Analiza leksykalna
+    * klasa Lexer - otrzymuje znaki od obiektu Reader, z otrzymanych znaków tworzy tokeny
+    * metody klasy:
+        * next() - tworzy kolejny token
+        * current() - zwraca ostatnio utworzony token
+        * position() - zwraca pozycję ostatniego tokena
+* Analiza składniowa
+    * klasa Parser - z otrzymanych od klasy Lexer tokenów tworzy drzewa AST
+    * metody klasy:
+        * parse() - tworzy drzewo AST
+* Analiza semantyczna
+    * klasa SemanticChecker - sprawdza dane drzewo AST pod względem błędów semantycznych
+    * metody klasy:
+        * check() - sprawdzenie drzewa
+* Interpretacja
+    * Interpreter - wykonuje instrukcje z drzewa AST
+    * metody klasy:
+        * interpret() - wykonuje instrukcje z drzewa AST, zwraca wartość z funkcji main lub błędy powstałe przy interpretacji
