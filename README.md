@@ -409,8 +409,7 @@ string = '"', { letter | digit }, '"'
 
 | Operator | Priorytet | Łączność |
 | ------ | ------ | ----- |
-| () | 8 | brak |
-| [] | 7 | brak |
+| () | 7 | brak |
 | ! | 6 | brak |
 | - (unarnie) | 6 | brak |
 | * | 5 | od lewej |
@@ -424,7 +423,7 @@ string = '"', { letter | digit }, '"'
 | == | 3 | brak |
 | != | 3 | brak |
 | && | 2 | od lewej |
-| || | 1 | od lewej |
+| \|\| | 1 | od lewej |
 
 #### Rzutowanie Typów
 | Typ 1 | Typ 2 | Operacja | Typ wynikowy |
