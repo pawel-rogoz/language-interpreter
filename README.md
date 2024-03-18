@@ -184,6 +184,20 @@ int main()
 ERROR: Can't cast string to int, at line 4, column 20
 ```
 
+* Operacje LINQ - przypisanie do zmiennej nieodpowiedniego typu
+```
+int main()
+{
+    List<int> liczby = new List(0,1,2,3);
+
+    int wiekszeOdJednego = select liczba where liczba > 1 from liczby;
+}
+```
+
+```
+ERROR: Can't assign 'List' to 'int', at line 5, column 25
+```
+
 #### Przykładowe kody źródłowe
 * Podstawowe operacje
 ```
@@ -303,6 +317,26 @@ int main()
 }
 ```
 
+* Operacje LINQ - WHERE
+```
+int main()
+{
+    List<int> liczby = new List(0,1,2,3);
+
+    List<int> wiekszeOdJeden = select liczba where liczba > 1 from liczby; // 2,3
+}
+```
+
+* Operacje LINQ - ORDER BY
+```
+int main()
+{
+    List<int> liczby = new List(1, 4, 3, 0, 2);
+
+    List<int> wiekszeOdJeden = select liczba where liczba > 1 orderby liczba from liczby; // 2,3,4
+}
+```
+
 #### Formalna specyfikacja i składnia (EBNF):
 ##### Część składniowa
 ```
@@ -323,9 +357,9 @@ statement = { initialization
 initialization = declaration, [ assignment ], ";"
 declaration = type, id
 assignment = "=", ( expression | classInitialization )
-classInitialization = "new", className, "(", arguments, ")"
+classInitialization = "new", className, "(", parameters, ")"
 
-assignmentOrCall = id, [ "[", expression, "]" ], ( ( "(", arguments, ")" | { ".", id, "(", arguments, ")" } ) | "=" expression ), ";"
+assignmentOrCall = idOrCall, [ "=", expression ], ";"
 
 ifStatement = "if", "(", expression, ")", body, { "else if", "(", expression, ")", body }, [ "else", body]
 whileLoop = "while", "(", expression, ")", body
@@ -341,9 +375,9 @@ castingIndexingTerm = [ "(", type ,")" ], term, [ "[", expression, "]" ]
 term = literal | idOrCall | "(", expression, ")" | linqOperation
 
 literal = bool | string | number | floatNumber
-idOrCall = id, [ ( "(", arguments, ")" | { ".", id, "(", arguments, ")" } ) ]
+idOrCall = id, [ ( "[", expression, "]" | { [ ".", id ], "(", parameters, ")" } ) ]
 
-arguments = [ expression, { ",", expression } ]
+parameters = [ expression, { ",", expression } ]
 
 linqOperation = "from", expression, [ "where", expression ], [ "orderby", expression ], "select", expression, ";"
 
@@ -375,8 +409,8 @@ string = '"', { letter | digit }, '"'
 
 | Operator | Priorytet | Łączność |
 | ------ | ------ | ----- |
-| () | 8 | od lewej |
-| [] | 7 | od lewej |
+| () | 8 | brak |
+| [] | 7 | brak |
 | ! | 6 | brak |
 | - (unarnie) | 6 | brak |
 | * | 5 | od lewej |
@@ -462,3 +496,10 @@ Rodzaje tokenów:
     * ```IntValue```
     * ```FloatValue```
     * ```BoolValue```
+* Listy
+    * ```ListValues```
+* Pary
+    * ```PairKey```
+    * ```ValueKey```
+* Słownik
+    * ```DictValues```
