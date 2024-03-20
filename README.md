@@ -1,93 +1,586 @@
 # TKOM24L
+Paweł Rogóż
+### Elementy dokumentu
+[[*TOC*]]
 
+#### Temat projektu:
+Język z wbudowanym typem słownika z określoną kolejnością elementów. Kolejność elementów w słowniku jest tożsama z kolejnością wstawiania do niego elementów. Możliwe są podstawowe operacje na słowniku (dodawanie, usuwanie, wyszukiwanie elementów wg klucza, sprawdzanie, czy dany klucz znajduje się w słowniku itd.), iterowanie po elementach oraz wykonywanie na słowniku zapytań w stylu LINQ.
 
+###### Cechy języka:
+ - język typowany statycznie, silnie
 
-## Getting started
+#### Założenia:
+ - język zostanie zaimplementowany w języku Python
+ - język posiada trzy wbudowane klasy: ```List``` , ```Pair``` , ```Dict``` 
+ - typy języka: ```string```, ```int```, ```bool```, ```float```
+ - język udostępnia instrukcję warunkową ```if else```
+ - język udostępnia pętlę ```while```
+ - każdy program musi posiadać funkcję ```main```
+ - język pozwala na tworzenie oraz wywoływanie funkcji (posiada typ void dla funkcji, które nie zwracają żadnych wartości)
+ - język pozwala na tworzenie komentarzy
+ - maksymalna długość stringa: 256
+ - maksymalna wielkość liczby: 10 cyfr
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+#### Klasa ```List```
+ - tworzenie instancji klasy:
+```
+List<int> przykladowa_lista = new List();
+```
+ - instancja może też zostać zainicjowana wraz z początkowymi wartościami:
+```
+List<int> przykladowa_lista = new List(1,2,3);
+```
+- metody klasy:
+1. length() - metoda zwraca długość listy
+2. forEach() - metoda pozwala na iterowanie po wszystkich elementach listy
+3. push() - dodaje element na koniec listy
+4. pop() - usuwa element z końca listy
+5. [ index ] - klasa umożliwia pobieranie / ustawianie wartości dla danego indeksu
+```
+int number = przykladowa_lista[0]; // number: 1
+przykladowa_lista[0] = 2; // przykladowa_lista: 2,2,3
+```
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+#### Klasa ```Pair```
+ - tworzenie instancji klasy:
+```
+Pair<string,int> przykladowa_para = new Pair("age", 10);
+```
+ - instancja musi zostać zainicjowana wraz z początkowymi wartościami
+ - metody klasy:
+1. key() - zwraca klucz pary
+2. value() - zwraca wartość pary
 
-## Add your files
+#### Klasa ```Dict```
+ - tworzenie instancji klasy:
+```
+Dict<string,int> przykladowy_slownik = new Dict();
+```
+ - instancja może też zostać zainicjowana wraz w początkowymi wartościami:
+ ```
+ Dict<string,int> przykladowy_slownik = new Dict("age": 10);
+ ```
+ - metody klasy:
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+|   Metoda    | Opis    |   Parametry wywołania |   Typ zwracanej wartości    |
+|   :---    |   :---    |   :---    |   :---    |
+| keys()      | Zwraca wszystkie klucze występujące w słowniku       | brak   | List
+| values()   | Zwraca wszystkie wartości występujące w słowniku         | brak | List |
+| add()   | Dodaje nową parę klucz-wartość do słownika | Pair<x,y> para | brak |
+| remove()   | Usuwa parę ze słownika | klucz, np: 1 | brak |
+| forEach()   | Iterowanie po parach występujących w słowniku| funkcja, która ma być wywołana na danej parze | Zgodna z typem funkcji podanej w parametrze wywołania |
+| isKey()   | Sprawdzenie, czy dany klucz znajduje się w słowniku | klucz, np: 1 | bool |
+| length() | Zwraca ilość elementów w słowniku | brak | Int |
+| [key] | Pozwala na pobieranie i ustawianie wartości znajdujących się w słowniku pod danym kluczem | key | Zgodna z typem wartości |
+```
+int age = przykladowy_slownik["age"]; // age: 10
+przykladowy_slownik["age"] = 20; // przykladowy_slownik: ("age": 20)
+```
+
+#### Sposób uruchomienia
+Program będzie aplikacją konsolową, jego argumentem wywołania jest ścieżka do pliku zawierającego kod źródłowy
+```
+python3 interpreter.py kod_zdrodlowy.txt
+```
+
+#### Obsługa błędów
+Program będzie zwracać kod błędu, oraz wiersz i kolumnę, w których ten błąd występuje:
+
+Przykład:
+```
+ERROR: Can't assign 'string' for type 'int', at: line 10, column 3
+```
+Przykładowe błędy:
+* Pobieranie / ustawianie przez indeks
+```
+int main()
+{
+    string xyz = "xyz";
+    List<int> przykladowa_lista = new List(1,2,3,4,5);
+
+    przykladowa_lista[xyz] = 10;
+}
+```
 
 ```
-cd existing_repo
-git remote add origin https://gitlab-stud.elka.pw.edu.pl/TKOM_24L_AM/Pawel_Rogoz/tkom24l.git
-git branch -M main
-git push -uf origin main
+ERROR: index must be type 'int', at line 6, column 19
 ```
 
-## Integrate with your tools
+* Długość cyfry większa od 10
+```
+int main()
+{
+    int number = 10000000000;
+}
+```
 
-- [ ] [Set up project integrations](https://gitlab-stud.elka.pw.edu.pl/TKOM_24L_AM/Pawel_Rogoz/tkom24l/-/settings/integrations)
+```
+ERROR: int too big (max 999999999), at line 3, column 14
+```
 
-## Collaborate with your team
+* Długość stringa wieksza od 256
+```
+int main()
+{
+    string name = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+}
+```
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+```
+ERROR: string too long (max 256), at line 3, column 10
+```
 
-## Test and Deploy
+* Inicjalizacja z wartością innego typu
+```
+int main()
+{
+    string name = 1;
+}
+```
 
-Use the built-in continuous integration in GitLab.
+```
+ERROR: Can't assign type 'int' for 'string', at line 3, column 14
+```
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+* Redefinicja zmiennych
+```
+int main()
+{
+    string name = "Anna";
+    name = 1;
+}
+```
 
-***
+```
+ERROR: Can't assign type 'int' for 'string', at line 4, column 7
+```
 
-# Editing this README
+* Wywołanie funkcji ze zbyt małą liczbą argumentów
+```
+int addOne(int number)
+{
+    number += 1;
+}
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+int main()
+{
+    addOne();
+}
+```
 
-## Suggestions for a good README
+```
+ERROR: addOne takes 1 argument, 0 given, at line 8, column 0
+```
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+* Próba rzutowania typów niemożliwych do zrzutowania
+```
+int main()
+{
+    string name = "Anna";
+    int number = (int) name;
+}
+```
 
-## Name
-Choose a self-explaining name for your project.
+```
+ERROR: Can't cast string to int, at line 4, column 20
+```
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+* Operacje LINQ - przypisanie do zmiennej nieodpowiedniego typu
+```
+int main()
+{
+    List<int> liczby = new List(0,1,2,3);
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+    int wiekszeOdJednego = select liczba where liczba > 1 from liczby;
+}
+```
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+```
+ERROR: Can't assign 'List' to 'int', at line 5, column 25
+```
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+* Brak średnika
+```
+int main()
+{
+    string imie = 'Anna'
+}
+```
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+```
+ERROR: ';' expected, at line 3, column 20
+```
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+#### Przykładowe kody źródłowe
+* Podstawowe operacje
+```
+void wypiszPare(Pair<string,int> para)
+{
+    print("Klucz: " + para.key() + ", wartość: " + para.value());
+}
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+int main()
+{
+    // typy zmiennych w języku
+    int wiek = 10;
+    float pi = 3.14;
+    bool czyJestKluczem = true;
+    string imie = "Jan";
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+    // rzutowania zmiennych
+    int waga = (int) 85.5; // waga: 85
+    float wagaFloat = (float) waga; //wagaFloat: 85.00
+    int czyJestPuste = (int) true;
+    string numer = (string) 10;
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+    // utworzenie nowych par
+    Pair<string,string> krajPierwszy = new Pair("Anglia", "Londyn");
+    Pair<string,string> krajDrugi = new Pair("Polska", "Warszawa");
+    Pair<string,string> krajTrzeci = new Pair("Niemcy", "Berlin");
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+    // utworzenie nowego słownika
+    Dict<string,string> stoliceKrajow = new Dict(krajPierwszy, krajDrugi);
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+    // dodawanie elementów do słownika
+    stoliceKrajow.add(krajTrzeci);
 
-## License
-For open source projects, say how it is licensed.
+    // usuwanie elementów ze słownika
+    stoliceKrajow.remove("Anglia");
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+    // metody: keys() oraz values()
+    List<string> kraje = stolice.keys();
+    List<string> stolice = stolice.values();
+
+    // metoda forEach()
+    stoliceKrajow.forEach(wypiszPanstwo());
+
+    while (wiek < 15)
+    {
+        wiek = wiek + 1;
+    }
+
+    return 0;
+}
+```
+
+* Rzutowanie Typów
+Tabela pokazująca możliwe sposoby rzutowania typów jest umieszczona niżej
+```
+int main()
+{
+    int price = 3;
+    float fullPrice = (float) price; // fullPrice = 3.00
+    fullPrice = 3.45;
+    int backToPrice = (int) fullPrice; // fullPrice = 3
+}
+```
+
+* Widoczność zmiennych
+Zmienne w pliku mają zakres blokowy, w związku z czym zmienna 'age' nie jest widoczna z poziomu funkcji
+```
+int main()
+{
+    int number = 3;
+
+    if (true)
+    {
+        int age = 10;
+        number = number + 1;
+    }
+
+    print(age); // ERROR: 'age' is not defined
+    print(number); // 4
+    
+}
+```
+
+* Zmienne przekazywane przez wartość
+Jako, że zmienne przekazywane są przez wartość, podanie zmiennej 'number' jako parametr wywołania funkcji addOne nie zmieni jej wartości
+```
+// zmienne przekazywane przez wartość
+void addOne(int number)
+{
+    number = number + 1;
+}
+
+int main()
+{
+    int number = 3;
+    addOne(number);
+    print(number); // 3, brak zmian
+}
+```
+
+* Zmienne niemutowalne
+Przykład poniżej ukazuje, że zmiana wartości dla klucza "Anglia" nie zmieni wartości zapisanej w słowniku stoliceKrajow
+```
+int main()
+{
+    Pair<string,string> krajPierwszy = new Pair("Anglia", "Londyn");
+
+    Dict<string,string> stoliceKrajow = new Dict(krajPierwszy);
+
+    stoliceKrajow["Anglia"] = "XYZ"; // krajPierwszy["Anglia"] = Londyn
+}
+```
+
+* Funkcje rekurencyjne
+```
+int fibonacci(int n)
+{
+    if (n < 3)
+    {
+        return 1;
+    }
+
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+int main()
+{
+    fib(5);
+}
+```
+
+* Operacje LINQ - WHERE, List
+Operacje LINQ można używać tylko do przypisania wartości do zmiennej. Użycie słów kluczowych WHERE, oraz ORDERBY jest opcjonalne, w przeciwieństwie do SELECT i FROM. Operacja zwraca wszystkie elementy spełniające podany warunek
+```
+int main()
+{
+    List<int> liczby = new List(0,1,2,3);
+
+    List<int> wiekszeOdJeden = select liczba where liczba > 1 from liczby; // 2,3
+}
+```
+
+* Operacje LINQ - ORDER BY, List
+Słowa kluczowe ASC, DESC umożliwiają sortowanie wyników rosnąco / malejąco
+```
+int main()
+{
+    List<int> liczby = new List(1, 4, 3, 0, 2);
+
+    List<int> wiekszeOdJeden = select liczba where liczba > 1 orderby liczba ASC from liczby; // 2,3,4
+}
+```
+
+* Operacje LINQ - WHERE, Dict
+```
+int main()
+{
+    Pair<string,int> oszczednosciJacka = new Pair("Jacek", 100);
+    Pair<string,int> oszczednosciMarcina = new Pair("Marcin", 250);
+    Pair<string,int> oszczednosciKrzysztofa = new Pair("Krzysztof", 150);
+
+    Dict<string,int> oszczednosci = new Dict(oszczednosciJacka, oszczednosciMarcina, oszczednosciKrzysztofa);
+
+    List<Pair<string,int>> wiekszeOdDwustu = select pair where pair.value() > 200 from oszczednosci; // [("Marcin", 250)]
+}
+```
+
+* Operacje LINQ - ORDER BY, Dict
+W przypadku słowników operujemy na umieszczonych w nich parach. Możemy zwracać cała parę lub jej składowe (key, value). Wynik zapytania umieszczony jest w nowej liście
+```
+int main()
+{
+    Pair<string,int> oszczednosciJacka = new Pair("Jacek", 100);
+    Pair<string,int> oszczednosciMarcina = new Pair("Marcin", 250);
+    Pair<string,int> oszczednosciKrzysztofa = new Pair("Krzysztof", 150);
+
+    Dict<string,int> oszczednosci = new Dict(oszczednosciJacka, oszczednosciMarcina, oszczednosciKrzysztofa);
+
+    List<Pair<string,int>> wiekszeOdStu = select pair where pair.value() > 200 orderby pair.key() ASC from oszczednosci; // [("Krzysztof", 150), ("Marcin", 250)]
+}
+```
+
+#### Formalna specyfikacja i składnia (EBNF):
+##### Część składniowa
+```
+program = { functionDefinition }
+
+functionDefinition = functionType, id, "(", [ functionArgument, { ",", functionArgument } ], ")", body
+
+body = "{", { statement }, "}"
+functionArgument = declaration
+
+statement = { initialization
+            | assignmentOrCall
+            | return
+            | ifStatement
+            | whileLoop
+            }
+
+initialization = declaration, [ assignment ], ";"
+declaration = type, id
+assignment = "=", ( expression | classInitialization )
+classInitialization = "new", className, "(", parameters, ")"
+
+assignmentOrCall = idOrCall, [ "=", expression ], ";"
+
+ifStatement = "if", "(", expression, ")", body, [ { "else if", "(", expression, ")", body }, "else", body ]
+whileLoop = "while", "(", expression, ")", body
+return = "return", expression, ";"
+
+expression = conjuction, { "||", conjuction }
+conjuction = relationTerm, { "&&", relationTerm }
+relationTerm = additiveTerm, [ relationOperator, additiveTerm ]
+additiveTerm = multiplicativeTerm, { ( "+" | "-" ), multiplicativeTerm }
+multiplicativeTerm = unaryApplication, { ( "*" | "/" ), unaryApplication }
+unaryApplication = [ ( "-" | "!" ) ], castingIndexingTerm
+castingIndexingTerm = [ "(", type ,")" ], term, [ "[", expression, "]" ]
+term = literal | idOrCall | "(", expression, ")" | linqOperation
+
+literal = bool | string | number | floatNumber
+idOrCall = id, [ { [ ".", id ], "(", parameters, ")", } ], [ "[", expression, "]" ]
+
+parameters = [ expression, { ",", expression } ]
+
+linqOperation = "from", expression, [ "where", expression ], [ "orderby", expression, ( "ASC", "DESC" ) ], "select", expression, ";"
+
+id = letter, { letter }
+```
+
+##### Część leksykalna
+```
+type = "int"
+    | "float"
+    | "string"
+    | "bool"
+    | classType
+classType = className, "<", type, [ "," type ], ">"
+className = "Dict" | "List" | "Pair"
+funcType = "void" | type
+relationOperator = ">", "<", ">=", "<=", "==", "!="
+
+bool = "true" | "false"
+nonZeroDigit = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+digit = "0" | nonZeroDigit
+letter = "a-z" | "A-Z"
+number = nonZeroDigit, { digit }
+floatNumber = ( "0" | nonZeroDigit, { digit } ), ".", digit, { digit }
+string = '"', { letter | digit }, '"'
+```
+
+#### Priorytety Operatorów
+
+| Operator | Priorytet | Łączność |
+| ------ | ------ | ----- |
+| () | 8 | brak |
+| [] | 7 | brak |
+| ! | 6 | brak |
+| - (unarnie) | 6 | brak |
+| * | 5 | od lewej |
+| / | 5 | od lewej |
+| + | 4 | od lewej |
+| - (binarnie) | 4 | od lewej |
+| > | 3 | brak |
+| < | 3 | brak |
+| >= | 3 | brak |
+| <= | 3 | brak |
+| == | 3 | brak |
+| != | 3 | brak |
+| && | 2 | od lewej |
+| \|\| | 1 | od lewej |
+
+#### Rzutowanie Typów
+| Typ Podstawowy | Typ Rzutowania | Działanie | Przykład
+| ------ | ------ | ----- | ----- |
+| int | string | "{int}" | ```string liczba = (string) 1; // liczba: "1"```|
+| float | string | "{float}" | ```string liczba = (string) 1.5; // liczba: "1.5"```|
+| bool | string | "( true \| false)" | ```string isEmpty = (string) true; // isEmpty: "true"```
+| float | int | ```Math.floor(float)``` | ```int liczba = (int) 1.5; // liczba: 1``` |
+| bool | int | ```0 \| 1``` | ```int liczba = (int) true; //liczba: 1``` |
+
+#### Tokeny
+Rodzaje tokenów:
+* Operatory Porównania
+    * ```Greater```
+    * ```Less```
+    * ```GreaterEqual```
+    * ```LessEqual```
+    * ```Equal```
+    * ```NotEqual```
+* Operatory Arytmetyczne
+    * ```Plus```
+    * ```Minus```
+    * ```Multiply```
+    * ```Divide```
+* Operatory Logiczne
+    * ```And```
+    * ```Or```
+    * ```Negate```
+* Nawiasowanie
+    * ```RoundOpen```
+    * ```RoundClose```
+    * ```CurlyOpen```
+    * ```CurlyClose```
+    * ```SquareOpen```
+    * ```SquareClose```
+* Słowa Kluczowe
+    * ```If```
+    * ```Else```
+    * ```While```
+    * ```Return```
+    * ```Select```
+    * ```From```
+    * ```Where```
+    * ```New```
+* Operacje LINQ
+    * ```Select```
+    * ```Where```
+    * ```From```
+    * ```OrderBy```
+    * ```ASC```
+    * ```DESC```
+* Typy
+    * ```Int```
+    * ```Float```
+    * ```Bool```
+    * ```String```
+    * ```Pair```
+    * ```List```
+    * ```Dict```
+* Przypisanie
+    * ```Assign```
+* Podział
+    * ```Dot```
+    * ```Semicolon```
+    * ```Comma```
+* Wartości i typy
+    * ```Id```
+    * ```Comment```
+    * ```StringValue```
+    * ```IntValue```
+    * ```FloatValue```
+    * ```BoolValue```
+* Strumień tekstowy
+    * ```EOT```
+
+Struktura interpretera
+* Tokeny
+    * token zawierać będzie typ tokenu (jeden z powyższych), jego pozycję (wiersz, kolumna, odległość od początku pliku w bajtach), oraz wartość, która będzie definiowana tylko dla niektórych typów tokenów (np. BoolValue), a domyślnie zdefiniowana na None
+* Analiza strumieni wejścia
+    * klasa Scanner - pobiera pojedynczo znaki ze źródła
+    * metody klasy:
+        * next() - pobiera następny znak
+        * current() - zwraca obecny znak
+        * position() - zwraca pozycję (wiersz, kolumna, odległość)
+* Analiza leksykalna
+    * klasa Lexer - otrzymuje znaki od obiektu Scanner, z otrzymanych znaków tworzy tokeny
+    * metody klasy:
+        * next() - tworzy kolejny token
+        * current() - zwraca ostatnio utworzony token
+        * position() - zwraca pozycję ostatniego tokena
+    * klasa Filter - pośrednik w komunikacji między lekserem a parserem, odpowiada za przesyłanie tylko wartościowych z punktu widzenia Parsera tokenów, (np pomija token Comment)
+* Analiza składniowa
+    * klasa Parser - z otrzymanych od klasy Lexer tokenów tworzy drzewa AST
+    * metody klasy:
+        * parse() - tworzy drzewo AST
+* Analiza semantyczna
+    * klasa SemanticChecker - sprawdza dane drzewo AST pod względem błędów semantycznych
+    * metody klasy:
+        * check() - sprawdzenie drzewa
+* Interpretacja
+    * Interpreter - wykonuje instrukcje z drzewa AST
+    * metody klasy:
+        * interpret() - wykonuje instrukcje z drzewa AST, zwraca wartość z funkcji main lub błędy powstałe przy interpretacji
