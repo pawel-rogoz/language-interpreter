@@ -431,7 +431,7 @@ castingIndexingTerm = [ "(", type ,")" ], term, [ "[", expression, "]" ]
 term = literal | idOrCall | "(", expression, ")" | linqOperation
 
 literal = bool | string | number | floatNumber
-idOrCall = id, [ ( "[", expression, "]" | { [ ".", id ], "(", parameters, ")" } ) ]
+idOrCall = id, [ { [ ".", id ], "(", parameters, ")", } ], [ "[", expression, "]" ]
 
 parameters = [ expression, { ",", expression } ]
 
@@ -465,7 +465,8 @@ string = '"', { letter | digit }, '"'
 
 | Operator | Priorytet | Łączność |
 | ------ | ------ | ----- |
-| () | 7 | brak |
+| () | 8 | brak |
+| [] | 7 | brak |
 | ! | 6 | brak |
 | - (unarnie) | 6 | brak |
 | * | 5 | od lewej |
@@ -552,22 +553,25 @@ Rodzaje tokenów:
     * ```IntValue```
     * ```FloatValue```
     * ```BoolValue```
+* Strumień tekstowy
+    * ```EOT```
 
 Struktura interpretera
 * Tokeny
-    * token zawierać będzie typ tokenu (jeden z powyższych), oraz jego pozycję (wiersz, kolumna, odległość od początku pliku w bajtach)
+    * token zawierać będzie typ tokenu (jeden z powyższych), jego pozycję (wiersz, kolumna, odległość od początku pliku w bajtach), oraz wartość, która będzie definiowana tylko dla niektórych typów tokenów (np. BoolValue), a domyślnie zdefiniowana na None
 * Analiza strumieni wejścia
-    * klasa Reader - pobiera pojedynczo znaki ze źródła
+    * klasa Scanner - pobiera pojedynczo znaki ze źródła
     * metody klasy:
         * next() - pobiera następny znak
         * current() - zwraca obecny znak
         * position() - zwraca pozycję (wiersz, kolumna, odległość)
 * Analiza leksykalna
-    * klasa Lexer - otrzymuje znaki od obiektu Reader, z otrzymanych znaków tworzy tokeny
+    * klasa Lexer - otrzymuje znaki od obiektu Scanner, z otrzymanych znaków tworzy tokeny
     * metody klasy:
         * next() - tworzy kolejny token
         * current() - zwraca ostatnio utworzony token
         * position() - zwraca pozycję ostatniego tokena
+    * klasa Filter - pośrednik w komunikacji między lekserem a parserem, odpowiada za przesyłanie tylko wartościowych z punktu widzenia Parsera tokenów, (np pomija token Comment)
 * Analiza składniowa
     * klasa Parser - z otrzymanych od klasy Lexer tokenów tworzy drzewa AST
     * metody klasy:
