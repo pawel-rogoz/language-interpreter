@@ -1,7 +1,8 @@
 from typing import Union
 from io import StringIO, TextIOBase
 
-from .position import Position
+from src.scanner.position import Position
+
 
 class Scanner:
     def __init__(self, source: Union[TextIOBase, StringIO]) -> None:
@@ -19,12 +20,10 @@ class Scanner:
             self.current_position = self.current_position.next_line()
 
         elif char == "\n":
-            print("newline")
             self.current_char = "\n"
             self.current_position = self.current_position.next_line()
 
         else:
-            print(char)
             self.current_char = char
             self.current_position = self.current_position.next_column()
 
