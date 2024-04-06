@@ -6,9 +6,6 @@ class TokenType(Enum):
     ELSE = auto()
     WHILE = auto()
     RETURN = auto()
-    SELECT = auto()
-    FROM = auto()
-    WHERE = auto()
     NEW = auto()
 
     # LINQ KEYWORDS
