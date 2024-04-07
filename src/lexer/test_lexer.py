@@ -5,7 +5,7 @@ from src.scanner.scanner import Scanner
 from src.tokens.token_type import TokenType
 from src.tokens.token import Token
 
-from io import StringIO
+from io import StringIO, TextIOBase
 import pytest
 
 
@@ -383,3 +383,57 @@ class TestMultipleTokens:
         scanner = Scanner(text)
         lexer = Lexer(scanner)
         assert lexer.try_build_token().type == TokenType.EOF
+
+    def test_string_assignment(self):
+        text = StringIO("string a = \"string\";")
+        scanner = Scanner(text)
+        lexer = Lexer(scanner)
+        tokens_types = []
+        for token in lexer.generate_tokens():
+            tokens_types.append(token.type)
+        assert tokens_types == [TokenType.STRING, TokenType.ID, TokenType.ASSIGN, TokenType.STRING_VALUE, TokenType.SEMICOLON, TokenType.EOF]
+
+    def test_work_with_file(self):
+        file = open("main.pr", "r", encoding="utf-8")
+        scanner = Scanner(file)
+        lexer = Lexer(scanner)
+        tokens_types = []
+        for token in lexer.generate_tokens():
+            tokens_types.append(token.type)
+        assert tokens_types == [TokenType.INT,
+                                TokenType.ID,
+                                TokenType.ROUND_OPEN,
+                                TokenType.ROUND_CLOSE,
+                                TokenType.CURLY_OPEN,
+                                TokenType.STRING,
+                                TokenType.ID,
+                                TokenType.ASSIGN,
+                                TokenType.STRING_VALUE,
+                                TokenType.SEMICOLON,
+                                TokenType.LIST,
+                                TokenType.LESS,
+                                TokenType.INT,
+                                TokenType.GREATER,
+                                TokenType.ID,
+                                TokenType.ASSIGN,
+                                TokenType.NEW,
+                                TokenType.LIST,
+                                TokenType.ROUND_OPEN,
+                                TokenType.INT_VALUE,
+                                TokenType.COMMA,
+                                TokenType.INT_VALUE,
+                                TokenType.COMMA,
+                                TokenType.INT_VALUE,
+                                TokenType.ROUND_CLOSE,
+                                TokenType.SEMICOLON,
+                                TokenType.INT,
+                                TokenType.ID,
+                                TokenType.ASSIGN,
+                                TokenType.ID,
+                                TokenType.SQUARE_OPEN,
+                                TokenType.INT_VALUE,
+                                TokenType.SQUARE_CLOSE,
+                                TokenType.SEMICOLON,
+                                TokenType.CURLY_CLOSE,
+                                TokenType.EOF]
+
