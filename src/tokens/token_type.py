@@ -1,5 +1,6 @@
 from enum import Enum, auto
 
+
 class TokenType(Enum):
     # KEYWORDS
     IF = auto()

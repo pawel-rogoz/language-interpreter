@@ -9,14 +9,16 @@ from src.tokens.token_type import TokenType
 from src.tokens.token import Token
 from src.lexer.lexer_error import LexerError
 
-MAX_STRING = 256
-MAX_DIGIT = 10
+# MAX_STRING = 256
+# MAX_DIGIT = 10
 
 
 class Lexer:
-    def __init__(self, scanner: Scanner) -> None:
+    def __init__(self, scanner: Scanner, max_string=256, max_digit=10) -> None:
         self._position = Position(1, 0)
         self._scanner = scanner
+        self._max_string = max_string
+        self._max_digit = max_digit
 
     single_operators = {
         "(": TokenType.ROUND_OPEN,
@@ -138,15 +140,13 @@ class Lexer:
     def _try_build_integer(self):
         char = self._scanner.get_char()
 
-        power = 0
         number = 0
         i = 0
 
         while char.isdigit():
-            if i == MAX_DIGIT:
-                raise LexerError("int too big (max 999999999)", self._position)
+            if i == self._max_digit:
+                raise LexerError(f"int too big ({10 ^ self._max_digit-1})", self._position)
             number = number * 10 + int(char)
-            power += 1
             i += 1
             self._next_char()
             char = self._get_char()
@@ -166,9 +166,9 @@ class Lexer:
 
         while char != "\"":
             prev_position = self._position
-            if i == MAX_STRING:
-                raise LexerError("string too long (max 256)", self._position)
-            if char in ["EOF", "\n"]:
+            if i == self._max_string:
+                raise LexerError(f"string too long ({self._max_string})", self._position)
+            if char == "EOF":
                 raise LexerError(f"can't find closing \" for string: {''.join(chars_array)}", prev_position)
 
             i += 1
@@ -246,12 +246,13 @@ class Lexer:
         i = 0
 
         while char.isalpha() and char != "EOF":
-            if i > MAX_STRING:
-                raise LexerError("ID too long (max 256)", self._position)
+            if i > self._max_string:
+                raise LexerError(f"ID too long (max {self._max_string})", self._position)
             i += 1
             id_or_keyword_chars.append(char)
             self._next_char()
             char = self._get_char()
+            # if (char := self._get_char()) not in [self.keywords, self.conflict_operators["single"],
 
         if len(id_or_keyword_chars) == 0:
             return None
