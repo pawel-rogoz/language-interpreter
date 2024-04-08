@@ -76,6 +76,17 @@ class Lexer:
         "Dict": TokenType.DICT
     }
 
+    escape_characters = {
+        "n": "\n",
+        "t": "\t",
+        "r": "\r",
+        "f": "\f",
+        "b": "\b",
+        "\"": "\"",
+        "\\": "\\",
+        "\'": "\'"
+    }
+
     def get_scanner(self):
         return self._scanner
 
@@ -166,10 +177,20 @@ class Lexer:
             prev_position = self.get_position()
             if i == self._max_string:
                 raise LexerError(f"string too long ({self._max_string})", self.get_position())
+            i += 1
+
             if char == "EOF":
                 raise LexerError(f"can't find closing \" for string: {''.join(chars_array)}", prev_position)
+            elif char == "\\":
+                self._next_char()
+                if (char := self._get_char()) in ["t", "n", "'", "\"", "\\", "r", "b", "f"]:
+                    chars_array.append(self.escape_characters[char])
+                else:
+                    raise LexerError(f"can't find escape character like: \\{char}", self.get_position())
+                self._next_char()
+                char = self._get_char()
+                continue
 
-            i += 1
             chars_array.append(char)
 
             self._next_char()
@@ -268,6 +289,6 @@ class Lexer:
 
 
 if __name__ == "__main__":
-    scanner = Scanner(StringIO("l9"))
+    scanner = Scanner(StringIO("\"\\n \\t \\r \\b \\f \\' \\\"\""))
     lexer = Lexer(scanner)
     array = lexer.try_build_token()

@@ -35,6 +35,10 @@ class TestGetChar:
         scanner.next_char()
         assert scanner.get_char() == "EOF"
 
+    def test_escape_characters(self):
+        text = StringIO("\t")
+        scanner = Scanner(text)
+        assert scanner.get_char() == "\t"
 
 class TestPosition:
     def test_position_after_newline(self):

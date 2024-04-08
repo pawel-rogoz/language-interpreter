@@ -301,6 +301,12 @@ class TestString:
         with pytest.raises(LexerError):
             lexer.try_build_token()
 
+    def test_string_with_escape_character(self):
+        text = StringIO("\"Escape: \\n \\t \\r \\b \\f \\' \\\"\"")
+        scanner = Scanner(text)
+        lexer = Lexer(scanner)
+        assert lexer.try_build_token().value == "Escape: \n \t \r \b \f \' \""
+
 
 class TestDoubleOperators:
     def test_build_and(self):
