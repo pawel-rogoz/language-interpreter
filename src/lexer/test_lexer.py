@@ -400,13 +400,16 @@ class TestMultipleTokens:
         tokens_types = []
         for token in lexer.generate_tokens():
             tokens_types.append(token.type)
-        assert tokens_types == [TokenType.INT, TokenType.ID, TokenType.ASSIGN, TokenType.INT_VALUE, TokenType.SEMICOLON, TokenType.EOF]
+        assert tokens_types == [TokenType.COMMENT, TokenType.INT, TokenType.ID, TokenType.ASSIGN, TokenType.INT_VALUE, TokenType.SEMICOLON, TokenType.EOF]
 
     def test_skip_comment(self):
         text = StringIO("//comment\n//comment\n//comment")
         scanner = Scanner(text)
         lexer = Lexer(scanner)
-        assert lexer.try_build_token().type == TokenType.EOF
+        tokens_types = []
+        for token in lexer.generate_tokens():
+            tokens_types.append(token.type)
+        assert tokens_types == [TokenType.COMMENT, TokenType.COMMENT, TokenType.COMMENT, TokenType.EOF]
 
     def test_string_assignment(self):
         text = StringIO("string a = \"string\";")

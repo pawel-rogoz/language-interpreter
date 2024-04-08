@@ -224,15 +224,15 @@ class Lexer:
         self._next_char()
         if self._get_char() == "/":
             self._next_char()
-            while self._get_char() != "EOF":
-                if self._get_char() == "\n":
-                    self._next_char()
-                    self._try_build_divide_or_comment()
+            chars_array = []
+            while (char := self._get_char()) != "EOF":
+                if char == "\n":
                     break
+                chars_array.append(char)
                 self._next_char()
+            return Token(TokenType.COMMENT, self.get_position(), ''.join(chars_array))
         else:
             return Token(TokenType.DIVIDE, self.get_position())
-        return None
 
     def _try_build_keyword_or_type_or_id(self):
         char = self._get_char()
