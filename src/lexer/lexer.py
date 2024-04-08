@@ -124,9 +124,10 @@ class Lexer:
         return Token(TokenType.INT_VALUE, self._position, integer)
 
     def _try_build_float(self, integer):
+        prev_position = self._position
         self._next_char()
         if not self._get_char().isdigit():
-            raise LexerError("can't create float without any number after \".\"", self._position)
+            raise LexerError("can't create float without any number after \".\"", prev_position)
 
         float_part = self._try_build_integer()
         num_digits = int(math.log10(float_part)) + 1
@@ -164,10 +165,11 @@ class Lexer:
         chars_array = []
 
         while char != "\"":
+            prev_position = self._position
             if i == MAX_STRING:
                 raise LexerError("string too long (max 256)", self._position)
             if char in ["EOF", "\n"]:
-                raise LexerError(f"can't find closing \" for string: {''.join(chars_array)}", self._position)
+                raise LexerError(f"can't find closing \" for string: {''.join(chars_array)}", prev_position)
 
             i += 1
             chars_array.append(char)
@@ -267,6 +269,6 @@ class Lexer:
 
 
 if __name__ == "__main__":
-    scanner = Scanner(StringIO("//comment\nint number = 1;"))
+    scanner = Scanner(StringIO("l9"))
     lexer = Lexer(scanner)
     array = lexer.try_build_token()

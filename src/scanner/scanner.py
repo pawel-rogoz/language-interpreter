@@ -15,9 +15,7 @@ class Scanner:
         char = self.source.read(1)
         
         if not char:
-            print('EOF')
             self.current_char = 'EOF'
-            self.current_position = self.current_position.next_line()
 
         elif char == "\n":
             self.current_char = "\n"

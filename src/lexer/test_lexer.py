@@ -277,6 +277,22 @@ class TestString:
         with pytest.raises(LexerError):
             lexer.try_build_token()
 
+    def test_no_closing_error_position_just_quotation(self):
+        text = StringIO("\"")
+        scanner = Scanner(text)
+        lexer = Lexer(scanner)
+        with pytest.raises(LexerError) as error:
+            lexer.try_build_token()
+        assert error.value.position == Position(1, 1)
+
+    def test_no_closing_error_position_with_chars(self):
+        text = StringIO("\"aaa")
+        scanner = Scanner(text)
+        lexer = Lexer(scanner)
+        with pytest.raises(LexerError) as error:
+            lexer.try_build_token()
+        assert error.value.position == Position(1, 4)
+
     def test_too_long_error(self):
         string = 'a'*300
         text = StringIO(string)
@@ -351,6 +367,14 @@ class TestSingleOrDoubleOperators:
 
 
 class TestMultipleTokens:
+    # def test_no_token(self):
+    #     text = StringIO("l9")
+    #     scanner = Scanner(text)
+    #     lexer = Lexer(scanner)
+    #     assert lexer.try_build_token().value == "l"
+    #     with pytest.raises(LexerError):
+    #       lexer.try_build_token()
+
     def test_int_assignment(self):
         text = StringIO("int number = 1;")
         scanner = Scanner(text)
@@ -436,4 +460,3 @@ class TestMultipleTokens:
                                 TokenType.SEMICOLON,
                                 TokenType.CURLY_CLOSE,
                                 TokenType.EOF]
-

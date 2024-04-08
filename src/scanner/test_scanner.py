@@ -45,7 +45,7 @@ class TestPosition:
     def test_position_after_eof(self):
         text = StringIO("")
         scanner = Scanner(text)
-        assert scanner.get_position() == Position(2, 1)
+        assert scanner.get_position() == Position(1, 0)
 
     def test_position_after_one_char(self):
         text = StringIO("a")
