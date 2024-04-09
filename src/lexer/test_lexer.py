@@ -321,6 +321,27 @@ class TestDoubleOperators:
         lexer = Lexer(scanner)
         assert lexer.try_build_token().type == TokenType.OR
 
+    def test_and_or_error(self):
+        text = StringIO("&|")
+        scanner = Scanner(text)
+        lexer = Lexer(scanner)
+        with pytest.raises(LexerError):
+            lexer.try_build_token()
+
+    def test_single_and_error(self):
+        text = StringIO("&")
+        scanner = Scanner(text)
+        lexer = Lexer(scanner)
+        with pytest.raises(LexerError):
+            lexer.try_build_token()
+
+    def test_single_or_error(self):
+        text = StringIO("|")
+        scanner = Scanner(text)
+        lexer = Lexer(scanner)
+        with pytest.raises(LexerError):
+            lexer.try_build_token()
+
 
 class TestSingleOrDoubleOperators:
     def test_build_negate(self):
@@ -425,6 +446,23 @@ class TestMultipleTokens:
         for token in lexer.generate_tokens():
             tokens_types.append(token.type)
         assert tokens_types == [TokenType.STRING, TokenType.ID, TokenType.ASSIGN, TokenType.STRING_VALUE, TokenType.SEMICOLON, TokenType.EOF]
+
+    def test_no_spaces(self):
+        text = StringIO("int a=1;\n")
+        scanner = Scanner(text)
+        lexer = Lexer(scanner)
+        tokens_types = []
+        for token in lexer.generate_tokens():
+            tokens_types.append(token.type)
+        assert tokens_types == [TokenType.INT, TokenType.ID, TokenType.ASSIGN, TokenType.INT_VALUE, TokenType.SEMICOLON, TokenType.EOF]
+
+    def test_undefined_token_after_id_error(self):
+        text = StringIO("a9?")
+        scanner = Scanner(text)
+        lexer = Lexer(scanner)
+        lexer.try_build_token()
+        with pytest.raises(LexerError):
+            lexer.try_build_token()
 
     def test_work_with_file(self):
         file = open("main.pr", "r", encoding="utf-8")
