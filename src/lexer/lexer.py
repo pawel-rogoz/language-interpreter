@@ -1,5 +1,7 @@
 # from typing import Union
 import math
+import argparse
+import os
 from io import StringIO, TextIOBase
 from typing import Optional
 
@@ -100,7 +102,7 @@ class Lexer:
         self._scanner.next_char()
 
     def _skip_whitespaces(self):
-        while self._get_char().isspace():
+        while self._get_char().isspace() or self._get_char() == "\n":
             self._next_char()
 
     def try_build_token(self):
@@ -204,27 +206,30 @@ class Lexer:
         char = self._scanner.get_char()
 
         if char in self.single_operators:
+            prev_position = self.get_position()
             self._next_char()
-            return Token(self.single_operators[char], self.get_position())
+            return Token(self.single_operators[char], prev_position)
         return None
 
     def _try_build_two_char_operator(self):
         char = self._get_char()
 
         if char in self.double_operators:
+            prev_position = self.get_position()
             self._next_char()
             if self._get_char() == char:
-                return Token(self.double_operators[char], self.get_position())
+                return Token(self.double_operators[char], prev_position)
         return None
 
     def _try_build_one_or_two_char_operator(self):
         char = self._get_char()
 
         if char in self.conflict_operators["single"]:
+            prev_position = self.get_position()
             self._next_char()
             if self._get_char() == "=":
                 return Token(self.conflict_operators["double"][char+"="], self.get_position())
-            return Token(self.conflict_operators["single"][char], self.get_position())
+            return Token(self.conflict_operators["single"][char], prev_position)
 
         return None
 
@@ -261,17 +266,19 @@ class Lexer:
         if not char.isalpha():
             return None
         
-        id_or_keyword_chars = []
-        i = 0
+        id_or_keyword_chars = [char]
+        i = 1
 
-        while char.isalpha() and char != "EOF":
+        self._next_char()
+        char = self._get_char()
+
+        while (char.isalpha() or char.isdigit() or char == "_") and char != "EOF":
             if i > self._max_string:
                 raise LexerError(f"ID too long (max {self._max_string})", self.get_position())
             i += 1
             id_or_keyword_chars.append(char)
             self._next_char()
             char = self._get_char()
-            # if (char := self._get_char()) not in [self.keywords, self.conflict_operators["single"],
 
         if len(id_or_keyword_chars) == 0:
             return None
@@ -288,7 +295,26 @@ class Lexer:
         yield token
 
 
+def main():
+    parser = argparse.ArgumentParser(description="Creates Lexer object for given string or file")
+    parser.add_argument("source", help="String or path to file")
+    args = parser.parse_args()
+
+    source = args.source
+
+    try:
+        if os.path.exists(source):
+            source = open(source, "r", encoding="utf-8")
+        else:
+            source = StringIO(source)
+
+        scanner = Scanner(source)
+        lexer = Lexer(scanner)
+        for token in lexer.generate_tokens():
+            print(token)
+    except Exception as e:
+        print(e)
+
+
 if __name__ == "__main__":
-    scanner = Scanner(StringIO("\"\\n \\t \\r \\b \\f \\' \\\"\""))
-    lexer = Lexer(scanner)
-    array = lexer.try_build_token()
+    main()
