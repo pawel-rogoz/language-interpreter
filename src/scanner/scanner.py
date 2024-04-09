@@ -21,6 +21,12 @@ class Scanner:
             self.current_char = "\n"
             self.current_position = self.current_position.next_line()
 
+        elif char == "\r":
+            if (char := self.source.read(1)) != "\n":
+                raise Exception()
+            self.current_char = "\n"
+            self.current_position = self.current_position.next_line()
+
         else:
             self.current_char = char
             self.current_position = self.current_position.next_column()

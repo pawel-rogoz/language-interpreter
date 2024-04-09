@@ -40,6 +40,7 @@ class TestGetChar:
         scanner = Scanner(text)
         assert scanner.get_char() == "\t"
 
+
 class TestPosition:
     def test_position_after_newline(self):
         text = StringIO("\n")
@@ -61,3 +62,8 @@ class TestPosition:
         scanner = Scanner(text)
         scanner.next_char()
         assert scanner.get_position() == Position(2, 1)
+
+    def test_char_after_windows_newline(self):
+        text = StringIO("\r\n")
+        scanner = Scanner(text)
+        assert scanner.current_char == "\n"
