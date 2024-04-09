@@ -67,3 +67,8 @@ class TestPosition:
         text = StringIO("\r\n")
         scanner = Scanner(text)
         assert scanner.current_char == "\n"
+
+    def test_just_carriage_return_error(self):
+        text = StringIO("\r")
+        with pytest.raises(Exception):
+            Scanner(text)
