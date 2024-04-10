@@ -68,7 +68,34 @@ class TestPosition:
         scanner = Scanner(text)
         assert scanner.current_char == "\n"
 
-    def test_just_carriage_return_error(self):
+
+class TestEscapeCharacters:
+    def test_newline(self):
+        text = StringIO("\n")
+        scanner = Scanner(text)
+        assert scanner.current_char == "\n"
+
+    def test_apostrophe(self):
+        text = StringIO("\'")
+        scanner = Scanner(text)
+        assert scanner.current_char == "\'"
+
+    def test_quotation_mark(self):
+        text = StringIO("\"")
+        scanner = Scanner(text)
+        assert scanner.current_char == "\""
+
+    def test_tab(self):
+        text = StringIO("\t")
+        scanner = Scanner(text)
+        assert scanner.current_char == "\t"
+
+    def test_carriage_return(self):
         text = StringIO("\r")
-        with pytest.raises(Exception):
-            Scanner(text)
+        scanner = Scanner(text)
+        assert scanner.current_char == "\r"
+
+    def test_backslash(self):
+        text = StringIO("\\")
+        scanner = Scanner(text)
+        assert scanner.current_char == "\\"

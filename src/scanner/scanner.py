@@ -11,6 +11,17 @@ class Scanner:
         self.source = source
         self.next_char()
 
+    # escape_characters = {
+    #     "n": "\n",
+    #     "t": "\t",
+    #     "r": "\r",
+    #     "f": "\f",
+    #     "b": "\b",
+    #     "\"": "\"",
+    #     "\\": "\\",
+    #     "\'": "\'"
+    # }
+
     def next_char(self):
         char = self.source.read(1)
         
@@ -22,10 +33,14 @@ class Scanner:
             self.current_position = self.current_position.next_line()
 
         elif char == "\r":
-            if (char := self.source.read(1)) != "\n":
-                raise Exception()
-            self.current_char = "\n"
-            self.current_position = self.current_position.next_line()
+            current_position = self.source.tell()
+            if (self.source.read(1)) == "\n":
+                self.current_char = "\n"
+                self.current_position = self.current_position.next_line()
+            else:
+                self.source.seek(current_position)
+                self.current_char = "\r"
+                self.current_position = self.current_position.next_column()
 
         else:
             self.current_char = char
@@ -36,3 +51,7 @@ class Scanner:
     
     def get_position(self):
         return self.current_position
+
+
+if __name__ == "__main__":
+    scanner = Scanner(StringIO("\r\n"))
