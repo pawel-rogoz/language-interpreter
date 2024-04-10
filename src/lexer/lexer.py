@@ -1,4 +1,3 @@
-# from typing import Union
 import math
 import argparse
 import os
@@ -9,10 +8,7 @@ from src.scanner.position import Position
 from src.scanner.scanner import Scanner
 from src.tokens.token_type import TokenType
 from src.tokens.token import Token
-from src.lexer.lexer_error import LexerError
-
-# MAX_STRING = 256
-# MAX_DIGIT = 10
+from src.lexer.lexer_error import IntError, FloatError, IdentifierError, StringError, EscapeCharacterError, CreateTokenError
 
 
 class Lexer:
@@ -119,7 +115,7 @@ class Lexer:
         if token:
             return token
         
-        raise LexerError("Cannot create token", self.get_position())
+        raise CreateTokenError("Cannot create token", self.get_position())
 
     def _try_build_eof(self):
         if self._get_char() == 'EOF':
@@ -140,7 +136,7 @@ class Lexer:
         prev_position = self.get_position()
         self._next_char()
         if not self._get_char().isdigit():
-            raise LexerError("can't create float without any number after \".\"", prev_position)
+            raise FloatError("can't create float without any number after \".\"", prev_position)
 
         float_part = self._try_build_integer()
         num_digits = int(math.log10(float_part)) + 1
@@ -156,7 +152,7 @@ class Lexer:
 
         while char.isdigit():
             if i == self._max_digit:
-                raise LexerError(f"int too big ({10 ^ self._max_digit-1})", self.get_position())
+                raise IntError(f"int too big (max {10 ** self._max_digit - 1})", self.get_position())
             number = number * 10 + int(char)
             i += 1
             self._next_char()
@@ -178,17 +174,17 @@ class Lexer:
         while char != "\"":
             prev_position = self.get_position()
             if i == self._max_string:
-                raise LexerError(f"string too long ({self._max_string})", self.get_position())
+                raise StringError(f"string too long (max {self._max_string})", self.get_position())
             i += 1
 
             if char == "EOF":
-                raise LexerError(f"can't find closing \" for string: {''.join(chars_array)}", prev_position)
+                raise StringError(f"can't find closing \" for string: {''.join(chars_array)}", prev_position)
             elif char == "\\":
                 self._next_char()
                 if (char := self._get_char()) in ["t", "n", "'", "\"", "\\", "r", "b", "f"]:
                     chars_array.append(self.escape_characters[char])
                 else:
-                    raise LexerError(f"can't find escape character like: \\{char}", self.get_position())
+                    raise EscapeCharacterError(f"can't find escape character like: \\{char}", self.get_position())
                 self._next_char()
                 char = self._get_char()
                 continue
@@ -274,7 +270,7 @@ class Lexer:
 
         while (char.isalpha() or char.isdigit() or char == "_") and char != "EOF":
             if i > self._max_string:
-                raise LexerError(f"ID too long (max {self._max_string})", self.get_position())
+                raise IdentifierError(f"ID too long (max {self._max_string})", self.get_position())
             i += 1
             id_or_keyword_chars.append(char)
             self._next_char()
@@ -298,9 +294,17 @@ class Lexer:
 def main():
     parser = argparse.ArgumentParser(description="Creates Lexer object for given string or file")
     parser.add_argument("source", help="String or path to file")
+    parser.add_argument("--max_digit",
+                        help="Declare max number of digits that integer part of int or float can contain",
+                        type=int)
+    parser.add_argument("--max_string",
+                        help="Declare max number of digits that integer part of int or float can contain",
+                        type=int)
     args = parser.parse_args()
 
     source = args.source
+    max_digit = args.max_digit
+    max_string = args.max_string
 
     try:
         if os.path.exists(source):
@@ -309,7 +313,7 @@ def main():
             source = StringIO(source)
 
         scanner = Scanner(source)
-        lexer = Lexer(scanner)
+        lexer = Lexer(scanner, max_string=max_string, max_digit=max_digit)
         for token in lexer.generate_tokens():
             print(token)
     except Exception as e:
