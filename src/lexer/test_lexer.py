@@ -456,6 +456,69 @@ class TestMultipleTokens:
             tokens_types.append(token.type)
         assert tokens_types == [TokenType.INT, TokenType.ID, TokenType.ASSIGN, TokenType.INT_VALUE, TokenType.SEMICOLON, TokenType.EOF]
 
+    def test_greater_equal_expression(self):
+        text = StringIO("1 >= 0")
+        scanner = Scanner(text)
+        lexer = Lexer(scanner)
+        tokens_types = []
+        for token in lexer.generate_tokens():
+            tokens_types.append(token.type)
+        assert tokens_types == [TokenType.INT_VALUE, TokenType.GREATER_EQUAL, TokenType.INT_VALUE, TokenType.EOF]
+
+    def test_less_equal_expression(self):
+        text = StringIO("1 <= 0")
+        scanner = Scanner(text)
+        lexer = Lexer(scanner)
+        tokens_types = []
+        for token in lexer.generate_tokens():
+            tokens_types.append(token.type)
+        assert tokens_types == [TokenType.INT_VALUE, TokenType.LESS_EQUAL, TokenType.INT_VALUE, TokenType.EOF]
+
+    def test_less_expression(self):
+        text = StringIO("1 < 0")
+        scanner = Scanner(text)
+        lexer = Lexer(scanner)
+        tokens_types = []
+        for token in lexer.generate_tokens():
+            tokens_types.append(token.type)
+        assert tokens_types == [TokenType.INT_VALUE, TokenType.LESS, TokenType.INT_VALUE, TokenType.EOF]
+
+    def test_greater_expression(self):
+        text = StringIO("1 > 0")
+        scanner = Scanner(text)
+        lexer = Lexer(scanner)
+        tokens_types = []
+        for token in lexer.generate_tokens():
+            tokens_types.append(token.type)
+        assert tokens_types == [TokenType.INT_VALUE, TokenType.GREATER, TokenType.INT_VALUE, TokenType.EOF]
+
+    def test_equal_expression(self):
+        text = StringIO("1 == 0")
+        scanner = Scanner(text)
+        lexer = Lexer(scanner)
+        tokens_types = []
+        for token in lexer.generate_tokens():
+            tokens_types.append(token.type)
+        assert tokens_types == [TokenType.INT_VALUE, TokenType.EQUAL, TokenType.INT_VALUE, TokenType.EOF]
+
+    def test_not_equal_expression(self):
+        text = StringIO("1 != 0")
+        scanner = Scanner(text)
+        lexer = Lexer(scanner)
+        tokens_types = []
+        for token in lexer.generate_tokens():
+            tokens_types.append(token.type)
+        assert tokens_types == [TokenType.INT_VALUE, TokenType.NOT_EQUAL, TokenType.INT_VALUE, TokenType.EOF]
+
+    def test_equal_strings(self):
+        text = StringIO("\"abc\" != \"xyz\"")
+        scanner = Scanner(text)
+        lexer = Lexer(scanner)
+        tokens_types = []
+        for token in lexer.generate_tokens():
+            tokens_types.append(token.type)
+        assert tokens_types == [TokenType.STRING_VALUE, TokenType.NOT_EQUAL, TokenType.STRING_VALUE, TokenType.EOF]
+
     def test_undefined_token_after_id_error(self):
         text = StringIO("a9?")
         scanner = Scanner(text)

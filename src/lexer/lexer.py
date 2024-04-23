@@ -2,7 +2,6 @@ import math
 import argparse
 import os
 from io import StringIO, TextIOBase
-from typing import Optional
 
 from src.scanner.position import Position
 from src.scanner.scanner import Scanner
@@ -224,6 +223,7 @@ class Lexer:
             prev_position = self.get_position()
             self._next_char()
             if self._get_char() == "=":
+                self._next_char()
                 return Token(self.conflict_operators["double"][char+"="], self.get_position())
             return Token(self.conflict_operators["single"][char], prev_position)
 
@@ -296,10 +296,10 @@ def main():
     parser.add_argument("source", help="String or path to file")
     parser.add_argument("--max_digit",
                         help="Declare max number of digits that integer part of int or float can contain",
-                        type=int)
+                        type=int, default=10)
     parser.add_argument("--max_string",
                         help="Declare max number of digits that integer part of int or float can contain",
-                        type=int)
+                        type=int, default=256)
     args = parser.parse_args()
 
     source = args.source
