@@ -70,7 +70,8 @@ class Lexer:
         "string": TokenType.STRING,
         "Pair": TokenType.PAIR,
         "List": TokenType.LIST,
-        "Dict": TokenType.DICT
+        "Dict": TokenType.DICT,
+        "void": TokenType.VOID
     }
 
     escape_characters = {
