@@ -18,6 +18,7 @@ class TokenType(Enum):
     DESC = auto()
 
     # TYPES
+    VOID = auto()
     INT = auto()
     FLOAT = auto()
     BOOL = auto()
