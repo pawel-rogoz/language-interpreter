@@ -10,7 +10,7 @@ from src.parser.classes.program import Program
 from src.parser.classes.function_definition import FunctionDefinition
 from src.parser.classes.parameter import Parameter
 from src.parser.classes.block import Block
-from src.parser.classes.linq_operation import LINQExpression
+from src.parser.classes.linq_expression import LINQExpression
 
 from src.parser.classes.type import *
 from src.parser.classes.expression import *
