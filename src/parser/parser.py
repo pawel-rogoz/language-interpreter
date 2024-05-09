@@ -16,6 +16,7 @@ from src.parser.classes.type import *
 from src.parser.classes.expression import *
 from src.parser.classes.statement import *
 from src.parser.classes.if_parts import *
+from src.parser.parser_error import *
 
 
 class Parser:
@@ -68,7 +69,7 @@ class Parser:
         TokenType.NOT_EQUAL
     }
 
-    def _get_expression(self, operator, left, right=None):
+    def _get_expression(self, operator, left, right=None) -> Expression | None:
         relation_operators = {
             TokenType.GREATER: GreaterExpression(left, right),
             TokenType.GREATER_EQUAL: GreaterEqualExpression(left, right),
@@ -101,9 +102,9 @@ class Parser:
         self._consume_token()
         return token
 
-    def _must_be(self, token_types: set) -> Token:
+    def _must_be(self, token_types: set, exception: Exception) -> Token:
         if (token := self.current_token).type not in token_types:
-            raise Exception
+            raise exception
 
         self._consume_token()
         return token
@@ -113,33 +114,40 @@ class Parser:
         functions = dict()
         while function_definition := self._parse_function_definition():
             if function_definition.name in functions.keys():
-                raise Exception
+                raise FunctionExistsError(f"Function {function_definition.name} has been already implemented",
+                                          function_definition.position)
             else:
                 functions.update({function_definition.name: function_definition})
 
         return Program(functions)
 
-    # functionDefinition = functionType, id, "(", [ functionArgument, { ",", functionArgument } ], ")", body
+    # functionDefinition = functionType, id, "(", [ functionParameter, { ",", functionParameter } ], ")", body
     def _parse_function_definition(self) -> FunctionDefinition | None:
         position = self._get_position()
-        # type = self._parse_type(is_function=True)
         type = self._parse_function_type()
         if type is None:
             return None
-        name = self._must_be({TokenType.ID}).value
-        self._must_be({TokenType.ROUND_OPEN})
+        name = (self._must_be({TokenType.ID},
+                              IdMissingError("Function has missing id", self._get_position()))
+                .value)
+        self._must_be({TokenType.ROUND_OPEN},
+                      BracketMissingError("Round-open bracket expected", self._get_position()))
         parameters = self._parse_parameters()
-        self._must_be({TokenType.ROUND_CLOSE})
+        self._must_be({TokenType.ROUND_CLOSE},
+                      BracketMissingError("Round-close bracket expected", self._get_position()))
         block = self._parse_block()
         return FunctionDefinition(name=name, type=type, parameters=parameters, block=block, position=position)
 
     # block = "{", { statement }, "}"
     def _parse_block(self) -> Block:
         statements = []
-        self._must_be({TokenType.CURLY_OPEN})
+        self._must_be({TokenType.CURLY_OPEN},
+                      BracketMissingError("Square-open bracket expected", self._get_position()))
         while statement := self._parse_statement():
             statements.append(statement)
-        self._must_be({TokenType.CURLY_CLOSE})
+
+        self._must_be({TokenType.CURLY_CLOSE},
+                      BracketMissingError("Square-close bracket expected", self._get_position()))
         return Block(statements=statements)
 
     # statement = { initialization | assignmentOrCall | return | ifStatement | whileLoop }
@@ -160,9 +168,11 @@ class Parser:
         type = self._parse_type()
         if not type:
             return None
-        id = self._must_be({TokenType.ID})
+        id = self._must_be({TokenType.ID},
+                           IdMissingError("Variable doesn't have id", self._get_position()))
         expression = self._parse_assignment()
-        self._must_be({TokenType.SEMICOLON})
+        self._must_be({TokenType.SEMICOLON},
+                      SemicolonMissingError("Semicolon expected", self._get_position()))
         if not expression:
             return DeclarationStatement(type, id)
         return InitializationStatement(type, id, expression)
@@ -171,19 +181,23 @@ class Parser:
     def _parse_assignment(self) -> Expression | None:
         if not self._can_be({TokenType.ASSIGN}):
             return None
-        expression = self._parse_expression()
+        if not (expression := self._parse_expression()):
+            raise ExpressionMissingError("Expression after assign expected", self._get_position())
         return expression
+
+    def parse_expression(self):
+        return self._parse_expression()
 
     # expression = conjunction, { "||", conjunction }
     def _parse_expression(self):
         if not (left := self._parse_conjunction()):
             return None
         right = None
-        if self.current_token.type == TokenType.OR:
-            right = self._parse_conjunction()
-            if not (right_right := self._parse_conjunction()):
-                raise Exception
-            right = OrExpression(right, right_right)
+        if self._can_be({TokenType.OR}):
+            if not (right := self._parse_expression()):
+                raise ExpressionMissingError("Expression after \'||\' expected", self._get_position())
+            if right.right is None:
+                right = right.left
         return OrExpression(left, right)
 
     # conjunction = relationTerm, { "&&", relationTerm }
@@ -191,12 +205,11 @@ class Parser:
         if not (left := self._parse_relation_term()):
             return None
         right = None
-        if self.current_token.type == TokenType.AND:
-            right = self._parse_relation_term()
-            if self._can_be({TokenType.AND}):
-                if not (right_right := self._parse_conjunction()):
-                    raise Exception
-                right = AndExpression(right, right_right)
+        if self._can_be({TokenType.AND}):
+            if not (right := self._parse_conjunction()):
+                raise ExpressionMissingError("Expression after \'&&\' expected", self._get_position())
+            if right.right is None:
+                right = right.left
         return AndExpression(left, right)
 
     # relationTerm = additiveTerm, [relationOperator, additiveTerm]
@@ -205,8 +218,11 @@ class Parser:
             return None
         right = None
         if operator := self._can_be(self.relation_operators):
-            if not (right := self._parse_additive_term()):
-                raise Exception
+            if not (right := self._parse_relation_term()):
+                raise ExpressionMissingError("Expression after relation operator expected", self._get_position())
+            if right.right is None:
+                right = right.left
+        if operator:
             return self._get_expression(operator.type, left, right)
         return RelationExpression(left, right)
 
@@ -216,12 +232,12 @@ class Parser:
             return None
         right = None
         if operator := self._can_be({TokenType.PLUS, TokenType.MINUS}):
-            if not (right := self._parse_multiplicative_term()):
-                raise Exception
-            if operator2 := self._can_be({TokenType.PLUS, TokenType.MINUS}):
-                if not (right_right := self._parse_additive_term()):
-                    raise Exception
-                right = self._get_expression(operator2.type, right, right_right)
+            if not (right := self._parse_additive_term()):
+                raise ExpressionMissingError("Expression after additive operator expected", self._get_position())
+            if right.right is None:
+                right = right.left
+        if operator:
+            return self._get_expression(operator.type, left, right)
         return BinaryExpression(left, right)
 
     # multiplicativeTerm = unaryApplication, {("*" | "/"), unaryApplication}
@@ -230,12 +246,12 @@ class Parser:
             return None
         right = None
         if operator := self._can_be({TokenType.MULTIPLY, TokenType.DIVIDE}):
-            if not (right := self._parse_unary_application()):
-                raise Exception
-            if operator2 := self._can_be({TokenType.MULTIPLY, TokenType.DIVIDE}):
-                if not (right_right := self._parse_multiplicative_term()):
-                    raise Exception
-                right = self._get_expression(operator2.type, right, right_right)
+            if not (right := self._parse_multiplicative_term()):
+                raise ExpressionMissingError("Expression after multiplicative operator expected", self._get_position())
+            if right.right is None:
+                right = right.left
+        if operator:
+            return self._get_expression(operator.type, left, right)
         return BinaryExpression(left, right)
 
     # unaryApplication = [ ( "-" | "!" ) ], castingIndexingTerm
@@ -243,24 +259,28 @@ class Parser:
         operator = self._can_be({TokenType.MINUS, TokenType.NEGATE})
         if not (expression := self._parse_casting_indexing_term()):
             return None
-        if operator == TokenType.NEGATE:
-            return NegationExpression(expression)
-        elif operator == TokenType.MINUS:
-            return UnarySubtractionExpression(expression)
-        else:
+        if operator is None:
             return UnaryExpression(expression)
+        elif operator.type == TokenType.NEGATE:
+            return NegationExpression(expression)
+        elif operator.type == TokenType.MINUS:
+            return UnarySubtractionExpression(expression)
 
     # castingIndexingTerm = ["(", type, ")"], term, ["[", expression, "]"]
     def _parse_casting_indexing_term(self):
         type = expression = None
         if self._can_be({TokenType.ROUND_OPEN}):
             type = self._parse_type()
-            self._must_be({TokenType.ROUND_CLOSE})
+            self._must_be({TokenType.ROUND_CLOSE},
+                          BracketMissingError("Expected round-close bracket after casting expression",
+                                              self._get_position()))
         if not (term := self._parse_term()):
             return None
         if self._can_be({TokenType.SQUARE_OPEN}):
             expression = self._parse_expression()
-            self._must_be({TokenType.SQUARE_CLOSE})
+            self._must_be({TokenType.SQUARE_CLOSE},
+                          BracketMissingError("Expected square-close bracket after indexing expression",
+                                              self._get_position()))
         return CastingExpression(expression=IndexingExpression(term, index=expression), type=type)
 
     # term = literal | idOrCall | "(", expression, ")" | linqOperation | classInitialization
@@ -273,7 +293,9 @@ class Parser:
         if not expression:
             if self._can_be({TokenType.ROUND_OPEN}):
                 expression = self._parse_expression()
-                self._must_be({TokenType.ROUND_CLOSE})
+                self._must_be({TokenType.ROUND_CLOSE},
+                              BracketMissingError("Expected round-close bracket after expression",
+                                                  self._get_position()))
             else:
                 return None
 
@@ -313,9 +335,13 @@ class Parser:
         if not self._can_be({TokenType.NEW}):
             return None
         type = self._parse_class_type()
-        self._must_be({TokenType.ROUND_OPEN})
+        self._must_be({TokenType.ROUND_OPEN},
+                      BracketMissingError("Expected round-open error",
+                                          self._get_position()))
         arguments = self._parse_arguments()
-        self._must_be({TokenType.ROUND_CLOSE})
+        self._must_be({TokenType.ROUND_CLOSE},
+                      BracketMissingError("Expected round-close error",
+                                          self._get_position()))
         return ClassInitializationExpression(type, arguments)
 
     # assignmentOrCall = idOrCall, [ "=", expression ], ";"
@@ -326,7 +352,9 @@ class Parser:
         if self._can_be({TokenType.ASSIGN}):
             if not (expression := self._parse_expression()):
                 raise Exception
-        self._must_be({TokenType.SEMICOLON})
+        self._must_be({TokenType.SEMICOLON},
+                      SemicolonMissingError("Semicolon expected",
+                                            self._get_position()))
         if expression:
             return AssignmentStatement(id_or_call, expression)
         return IdOrCallStatement(id_or_call)
@@ -342,7 +370,8 @@ class Parser:
         nested_id_or_call = None
         if self._can_be({TokenType.DOT}):
             if not (nested_id_or_call := self._parse_id_or_call()):
-                raise Exception
+                raise IdOrCallMissingError("Expected id after dot",
+                                           self._get_position())
         return IdOrCallExpression(id, call, index, nested_id_or_call)
 
     # callOrIndex = [ call ], [ index ]
@@ -356,7 +385,9 @@ class Parser:
         if not self._can_be({TokenType.ROUND_OPEN}):
             return None
         arguments = self._parse_arguments()
-        self._must_be({TokenType.ROUND_CLOSE})
+        self._must_be({TokenType.ROUND_CLOSE},
+                      BracketMissingError("Expected round-close bracket",
+                                          self._get_position()))
         return arguments
 
     # index = expression
@@ -364,7 +395,9 @@ class Parser:
         if not self._can_be({TokenType.SQUARE_OPEN}):
             return None
         index = self._parse_expression()
-        self._must_be({TokenType.SQUARE_CLOSE})
+        self._must_be({TokenType.SQUARE_CLOSE},
+                      BracketMissingError("Expected round-close bracket",
+                                          self._get_position()))
         return index
 
     # arguments = [ argument, { ",", argument } ]
@@ -385,12 +418,12 @@ class Parser:
         if not self._can_be({TokenType.RETURN}):
             return None
         expression = self._parse_expression()
-        self._must_be({TokenType.SEMICOLON})
+        self._must_be({TokenType.SEMICOLON},
+                      SemicolonMissingError("Expected semicolon",
+                                            self._get_position()))
         return ReturnStatement(expression)
 
-    # ifStatement = "if", "(", expression, ")", body, [{"else if", "(", expression, ")", body}, "else", body]
-    # maybe modify it to:
-    # ifStatement = "if", "(", expression, ")", body, [ { "else", [ "if", "(", expression, ")" ], body } ]
+    # ifStatement = "if", "(", expression, ")", body, [{"else", "if", "(", expression, ")", body}, "else", body]
     def _parse_if_statement(self) -> Statement | None:
         if not self._can_be({TokenType.IF}):
             return None
@@ -410,18 +443,27 @@ class Parser:
                 break
         return IfStatement(if_part, else_if_parts, else_part)
 
+    # "(", expression, ")"
     def _parse_if_expression(self) -> Expression:
-        self._must_be({TokenType.ROUND_OPEN})
+        self._must_be({TokenType.ROUND_OPEN},
+                      BracketMissingError("Expected round-open error",
+                                          self._get_position()))
         expression = self._parse_expression()
-        self._must_be({TokenType.ROUND_CLOSE})
+        self._must_be({TokenType.ROUND_CLOSE},
+                      BracketMissingError("Expected round-close error",
+                                          self._get_position()))
         return expression
 
     def _parse_while_loop(self):
         if not self._can_be({TokenType.WHILE}):
             return None
-        self._must_be({TokenType.ROUND_OPEN})
+        self._must_be({TokenType.ROUND_OPEN},
+                      BracketMissingError("Expected round-open error",
+                                          self._get_position()))
         expression = self._parse_expression()
-        self._must_be({TokenType.ROUND_CLOSE})
+        self._must_be({TokenType.ROUND_CLOSE},
+                      BracketMissingError("Expected round-close error",
+                                          self._get_position()))
         block = self._parse_block()
         return WhileStatement(expression, block)
 
@@ -437,14 +479,16 @@ class Parser:
         type = self._parse_type()
         if not (type := self._parse_type()):
             return None
-        id = self._must_be({TokenType.ID})
+        id = self._must_be({TokenType.ID},
+                           IdMissingError("Expected id",
+                                          self._get_position()))
         return Parameter(type=type, id=id)
 
     # functionType = type | "void"
     def _parse_type(self) -> Type | None:
         type = self._parse_base_type() \
-                or self._parse_class_type() \
-                or self._parse_function_type()
+               or self._parse_class_type() \
+               or self._parse_function_type()
         return type
 
     def _parse_function_type(self) -> BaseType | None:
@@ -464,13 +508,28 @@ class Parser:
         if not (token := self._can_be(self.class_type_set)):
             return None
         class_type = None
-        self._must_be({TokenType.LESS})
+        self._must_be({TokenType.LESS},
+                      ClassDeclarationError("Expected \'<\'",
+                                            self._get_position()))
         first_type = self._parse_type()
         if token.type in self.key_value_type_set:
-            self._must_be({TokenType.COMMA})
+            self._must_be({TokenType.COMMA},
+                          ClassDeclarationError("Key-Value type needs two types in declaration",
+                                                self._get_position()))
             second_type = self._parse_type()
             class_type = KeyValueType(self.token_type_to_type[token.type], first_type, second_type)
-        self._must_be({TokenType.GREATER})
+        self._must_be({TokenType.GREATER},
+                      ClassDeclarationError("Expected \'>\'",
+                                            self._get_position()))
         if not class_type:
             class_type = ElementType(self.token_type_to_type[token.type], first_type)
         return class_type
+
+
+text = StringIO("1 && 2 + 3 * !5 > 3 + 4 || 2 && 3 || 3 && 4 || 5")
+scanner = Scanner(text)
+lexer = Lexer(scanner)
+filter = Filter(lexer)
+parser = Parser(filter)
+expression = parser.parse_expression()
+expression
