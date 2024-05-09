@@ -1,9 +1,8 @@
 import math
 import argparse
 import os
-from io import StringIO, TextIOBase
+from io import StringIO
 
-from src.scanner.position import Position
 from src.scanner.scanner import Scanner
 from src.tokens.token_type import TokenType
 from src.tokens.token import Token
@@ -104,6 +103,8 @@ class Lexer:
     def try_build_token(self):
         self._skip_whitespaces()
 
+        position = self.get_position()
+
         token = self._try_build_divide_or_comment() \
             or self._try_build_eof() \
             or self._try_build_number() \
@@ -115,14 +116,17 @@ class Lexer:
         if token:
             return token
         
-        raise CreateTokenError("Cannot create token", self.get_position())
+        raise CreateTokenError("Cannot create token", position)
 
     def _try_build_eof(self):
+        position = self.get_position()
         if self._get_char() == 'EOF':
-            return Token(TokenType.EOF, self.get_position())
+            return Token(TokenType.EOF, position)
         return None
     
     def _try_build_number(self):
+        position = self.get_position()
+
         if not self._scanner.get_char().isdigit():
             return None
         
@@ -130,21 +134,24 @@ class Lexer:
 
         if self._get_char() == ".":
             return self._try_build_float(integer)
-        return Token(TokenType.INT_VALUE, self.get_position(), integer)
+        return Token(TokenType.INT_VALUE, position, integer)
 
     def _try_build_float(self, integer):
-        prev_position = self.get_position()
+        position = self.get_position()
+
         self._next_char()
         if not self._get_char().isdigit():
-            raise FloatError("can't create float without any number after \".\"", prev_position)
+            raise FloatError("can't create float without any number after \".\"", self.get_position())
 
         float_part = self._try_build_integer()
         num_digits = int(math.log10(float_part)) + 1
         number = float(integer) + float_part * 10 ** -num_digits
 
-        return Token(TokenType.FLOAT_VALUE, self.get_position(), number)
+        return Token(TokenType.FLOAT_VALUE, position, number)
 
     def _try_build_integer(self):
+        position = self.get_position()
+
         char = self._scanner.get_char()
 
         number = 0
@@ -152,7 +159,7 @@ class Lexer:
 
         while char.isdigit():
             if i == self._max_digit:
-                raise IntError(f"int too big (max {10 ** self._max_digit - 1})", self.get_position())
+                raise IntError(f"int too big (max {10 ** self._max_digit - 1})", position)
             number = number * 10 + int(char)
             i += 1
             self._next_char()
@@ -161,6 +168,8 @@ class Lexer:
         return number
 
     def _try_build_string(self):
+        position = self.get_position()
+
         char = self._scanner.get_char()
 
         if char != "\"":
@@ -174,7 +183,7 @@ class Lexer:
         while char != "\"":
             prev_position = self.get_position()
             if i == self._max_string:
-                raise StringError(f"string too long (max {self._max_string})", self.get_position())
+                raise StringError(f"string too long (max {self._max_string})", position)
             i += 1
 
             if char == "EOF":
@@ -184,7 +193,7 @@ class Lexer:
                 if (char := self._get_char()) in ["t", "n", "'", "\"", "\\", "r", "b", "f"]:
                     chars_array.append(self.escape_characters[char])
                 else:
-                    raise EscapeCharacterError(f"can't find escape character like: \\{char}", self.get_position())
+                    raise EscapeCharacterError(f"can't find escape character like: \\{char}", prev_position)
                 self._next_char()
                 char = self._get_char()
                 continue
@@ -194,30 +203,34 @@ class Lexer:
             self._next_char()
             char = self._get_char()
 
-        token = Token(TokenType.STRING_VALUE, self.get_position(), ''.join(chars_array))
+        token = Token(TokenType.STRING_VALUE, position, ''.join(chars_array))
         self._next_char()
         return token
 
     def _try_build_single_operator(self):
+        position = self.get_position()
+
         char = self._scanner.get_char()
 
         if char in self.single_operators:
-            prev_position = self.get_position()
             self._next_char()
-            return Token(self.single_operators[char], prev_position)
+            return Token(self.single_operators[char], position)
         return None
 
     def _try_build_two_char_operator(self):
+        position = self.get_position()
+
         char = self._get_char()
 
         if char in self.double_operators:
-            prev_position = self.get_position()
             self._next_char()
             if self._get_char() == char:
-                return Token(self.double_operators[char], prev_position)
+                return Token(self.double_operators[char], position)
         return None
 
     def _try_build_one_or_two_char_operator(self):
+        position = self.get_position()
+
         char = self._get_char()
 
         if char in self.conflict_operators["single"]:
@@ -225,8 +238,8 @@ class Lexer:
             self._next_char()
             if self._get_char() == "=":
                 self._next_char()
-                return Token(self.conflict_operators["double"][char+"="], self.get_position())
-            return Token(self.conflict_operators["single"][char], prev_position)
+                return Token(self.conflict_operators["double"][char+"="], position)
+            return Token(self.conflict_operators["single"][char], position)
 
         return None
 
@@ -239,6 +252,8 @@ class Lexer:
         return None
 
     def _try_build_divide_or_comment(self):
+        position = self.get_position()
+
         char = self._get_char()
 
         if char != "/":
@@ -253,11 +268,13 @@ class Lexer:
                     break
                 chars_array.append(char)
                 self._next_char()
-            return Token(TokenType.COMMENT, self.get_position(), ''.join(chars_array))
+            return Token(TokenType.COMMENT, position, ''.join(chars_array))
         else:
-            return Token(TokenType.DIVIDE, self.get_position())
+            return Token(TokenType.DIVIDE, position)
 
     def _try_build_keyword_or_type_or_id(self):
+        position = self.get_position()
+
         char = self._get_char()
 
         if not char.isalpha():
@@ -271,7 +288,7 @@ class Lexer:
 
         while (char.isalpha() or char.isdigit() or char == "_") and char != "EOF":
             if i > self._max_string:
-                raise IdentifierError(f"ID too long (max {self._max_string})", self.get_position())
+                raise IdentifierError(f"ID too long (max {self._max_string})", position)
             i += 1
             id_or_keyword_chars.append(char)
             self._next_char()
@@ -281,10 +298,10 @@ class Lexer:
             return None
         elif (result := ''.join(id_or_keyword_chars)) in self.keywords:
             if result in ['true', 'false']:
-                return Token(TokenType.BOOL_VALUE, self.get_position(), result)
-            return Token(self.keywords[result], self.get_position())
+                return Token(TokenType.BOOL_VALUE, position, result)
+            return Token(self.keywords[result], position)
         else:
-            return Token(TokenType.ID, self.get_position(), result)
+            return Token(TokenType.ID, position, result)
 
     def generate_tokens(self):
         while (token := self.try_build_token()).type != TokenType.EOF:
@@ -323,3 +340,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

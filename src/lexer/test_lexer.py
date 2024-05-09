@@ -1,11 +1,10 @@
 from src.lexer.lexer import Lexer
-from src.lexer.lexer_error import LexerError
+from src.lexer.lexer_error import *
 from src.scanner.position import Position
 from src.scanner.scanner import Scanner
 from src.tokens.token_type import TokenType
-from src.tokens.token import Token
 
-from io import StringIO, TextIOBase
+from io import StringIO
 import pytest
 
 
@@ -20,7 +19,7 @@ class TestInit:
         text = StringIO("")
         scanner = Scanner(text)
         lexer = Lexer(scanner)
-        assert lexer.get_position() == Position(1, 0)
+        assert lexer.get_position() == Position(1, 1)
 
 
 class TestKeywordsTokens:
@@ -256,6 +255,15 @@ class TestFloat:
         with pytest.raises(LexerError):
             lexer.try_build_token()
 
+    def test_no_number_after_dot_error(self):
+        number = "0."
+        text = StringIO(number)
+        scanner = Scanner(text)
+        lexer = Lexer(scanner)
+        with pytest.raises(FloatError) as error:
+            lexer.try_build_token()
+        assert error.value.position == Position(1,3)
+
 
 class TestString:
     def test_string_token(self):
@@ -283,7 +291,7 @@ class TestString:
         lexer = Lexer(scanner)
         with pytest.raises(LexerError) as error:
             lexer.try_build_token()
-        assert error.value.position == Position(1, 1)
+        assert error.value.position == Position(1, 2)
 
     def test_no_closing_error_position_with_chars(self):
         text = StringIO("\"aaa")
@@ -291,7 +299,7 @@ class TestString:
         lexer = Lexer(scanner)
         with pytest.raises(LexerError) as error:
             lexer.try_build_token()
-        assert error.value.position == Position(1, 4)
+        assert error.value.position == Position(1, 5)
 
     def test_too_long_error(self):
         string = 'a'*300
@@ -570,3 +578,65 @@ class TestMultipleTokens:
                                 TokenType.SEMICOLON,
                                 TokenType.CURLY_CLOSE,
                                 TokenType.EOF]
+
+
+class TestPosition:
+    def test_position_with_newlines(self):
+        text = StringIO("a\nb\nc")
+        scanner = Scanner(text)
+        lexer = Lexer(scanner)
+        tokens_position = list()
+        for token in lexer.generate_tokens():
+            tokens_position.append(token.position)
+        assert tokens_position == [Position(1, 1), Position(2, 1), Position(3, 1), Position(3, 2)]
+
+    def test_position_multiple_tokens_in_one_line(self):
+        text = StringIO("a b c")
+        scanner = Scanner(text)
+        lexer = Lexer(scanner)
+        tokens_position = list()
+        for token in lexer.generate_tokens():
+            tokens_position.append(token.position)
+        assert tokens_position == [Position(1, 1), Position(1, 3), Position(1, 5), Position(1, 6)]
+
+    def test_position_just_eof(self):
+        text = StringIO("")
+        scanner = Scanner(text)
+        lexer = Lexer(scanner)
+        assert lexer.try_build_token().position == Position(1, 1)
+
+    def test_position_of_integer(self):
+        text = StringIO("999")
+        scanner = Scanner(text)
+        lexer = Lexer(scanner)
+        assert lexer.try_build_token().position == Position(1, 1)
+
+    def test_position_of_string(self):
+        text = StringIO("\"abc\"")
+        scanner = Scanner(text)
+        lexer = Lexer(scanner)
+        assert lexer.try_build_token().position == Position(1, 1)
+
+    def test_position_of_bool(self):
+        text = StringIO("true")
+        scanner = Scanner(text)
+        lexer = Lexer(scanner)
+        assert lexer.try_build_token().position == Position(1, 1)
+
+    def test_position_of_operation(self):
+        text = StringIO("a + b")
+        scanner = Scanner(text)
+        lexer = Lexer(scanner)
+        tokens_position = list()
+        for token in lexer.generate_tokens():
+            tokens_position.append(token.position)
+        assert tokens_position == [Position(1, 1), Position(1, 3), Position(1, 5), Position(1, 6)]
+
+    def test_position_of_operation_without_spaces(self):
+        text = StringIO("a+b")
+        scanner = Scanner(text)
+        lexer = Lexer(scanner)
+        tokens_position = list()
+        for token in lexer.generate_tokens():
+            tokens_position.append(token.position)
+        assert tokens_position == [Position(1, 1), Position(1, 2), Position(1, 3), Position(1, 4)]
