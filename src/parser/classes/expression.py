@@ -53,7 +53,7 @@ class IndexingExpression(UnaryExpression):
 
 class LiteralExpression(Expression):
     def __init__(self, type, value):
-        self._type = type
+        self._type: Type = type
         self._value = value
 
     @property
