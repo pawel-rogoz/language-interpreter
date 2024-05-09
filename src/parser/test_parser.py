@@ -5,7 +5,7 @@ from src.filter.filter import Filter
 from src.parser.parser import Parser
 from src.parser.classes.statement import *
 from src.parser.classes.expression import *
-from src.parser.classes.type import Type
+from src.parser.classes.type import *
 from src.parser.classes.block import Block
 
 from io import StringIO, TextIOBase
@@ -44,7 +44,7 @@ class TestFunctionDefinition:
         assert self.program.get_functions()["main"].name == "main"
 
     def test_function_type(self):
-        assert self.program.get_functions()["main"].type == Type.INT
+        assert self.program.get_functions()["main"].type == FunctionType(Type.INT)
 
     def test_function_parameters(self):
         assert self.program.get_functions()["main"].parameters == list()
