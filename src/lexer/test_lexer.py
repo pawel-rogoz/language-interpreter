@@ -329,6 +329,15 @@ class TestDoubleOperators:
         lexer = Lexer(scanner)
         assert lexer.try_build_token().type == TokenType.OR
 
+    def test_build_multiple_or(self):
+        text = StringIO("|| || ||")
+        scanner = Scanner(text)
+        lexer = Lexer(scanner)
+        token_types = list()
+        while (token := lexer.try_build_token()).type != TokenType.EOF:
+            token_types.append(token.type)
+        assert token_types == [TokenType.OR]*3
+
     def test_and_or_error(self):
         text = StringIO("&|")
         scanner = Scanner(text)

@@ -6,7 +6,7 @@ from io import StringIO
 from src.scanner.scanner import Scanner
 from src.tokens.token_type import TokenType
 from src.tokens.token import Token
-from src.lexer.lexer_error import IntError, FloatError, IdentifierError, StringError, EscapeCharacterError, CreateTokenError
+from src.lexer.lexer_error import *
 
 
 class Lexer:
@@ -226,7 +226,9 @@ class Lexer:
         if char in self.double_operators:
             self._next_char()
             if self._get_char() == char:
+                self._next_char()
                 return Token(self.double_operators[char], position)
+            raise TwoCharOperatorError("Cannot create two char operator", position)
         return None
 
     def _try_build_one_or_two_char_operator(self):
@@ -341,4 +343,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

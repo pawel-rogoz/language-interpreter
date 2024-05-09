@@ -6,35 +6,33 @@ class LexerError(Exception):
         self.message = message
         self.position = position
 
-    def __str__(self) -> None:
+    def __str__(self) -> str:
         return f"{self.__class__.__name__}: {self.message}, at line: {self.position.line}, column: {self.position.column}"
 
 
 class IntError(LexerError):
-    def __init__(self, message: str, position: Position):
-        super().__init__(message, position)
+    pass
 
 
 class FloatError(LexerError):
-    def __init__(self, message: str, position: Position):
-        super().__init__(message, position)
+    pass
 
 
 class StringError(LexerError):
-    def __init__(self, message: str, position: Position):
-        super().__init__(message, position)
+    pass
 
 
 class EscapeCharacterError(LexerError):
-    def __init__(self, message: str, position: Position):
-        super().__init__(message, position)
+    pass
 
 
 class IdentifierError(LexerError):
-    def __init__(self, message: str, position: Position):
-        super().__init__(message, position)
+    pass
 
 
 class CreateTokenError(LexerError):
-    def __init__(self, message: str, position: Position):
-        super().__init__(message, position)
+    pass
+
+
+class TwoCharOperatorError(LexerError):
+    pass
