@@ -22,13 +22,13 @@ class TestNextLine:
     def test_column(self):
         position = Position()
         new_position = position.next_line()
-        assert new_position.column == 1
+        assert new_position.column == 0
 
     def test_column_value_back_to_one(self):
         position = Position()
         new_position = position.next_column()
         new_position = new_position.next_line()
-        assert new_position.column == 1
+        assert new_position.column == 0
 
 
 class TestNextColumn:

@@ -7,7 +7,7 @@ class Position:
     column: int = 0
 
     def next_line(self):
-        return Position(self.line + 1, 1)
+        return Position(self.line + 1, 0)
     
     def next_column(self):
         return Position(self.line, self.column + 1)
