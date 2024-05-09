@@ -1,5 +1,5 @@
 from src.filter.filter import Filter
-from io import StringIO, TextIOBase
+from io import StringIO
 from src.lexer.lexer import Lexer
 from src.scanner.position import Position
 from src.scanner.scanner import Scanner
@@ -22,6 +22,7 @@ class Parser:
     def __init__(self, filter: Filter):
         self.filter = filter
         self.current_token = None
+        self._previous_position = Position(1, 1)
         self._consume_token()
 
     base_type_set = {
@@ -36,19 +37,26 @@ class Parser:
         TokenType.PAIR
     }
 
-    value_type_set = {
+    element_type_set = {
         TokenType.LIST
     }
 
-    class_type_set = {
-        key_value_type_set,
-        value_type_set
-    }
+    class_type_set = key_value_type_set | element_type_set
+    function_type_set = {TokenType.VOID} | base_type_set | class_type_set
 
-    function_type_set = {
-        base_type_set,
-        class_type_set,
-        TokenType.VOID
+    token_type_to_type = {
+        TokenType.INT: Type.INT,
+        TokenType.FLOAT: Type.FLOAT,
+        TokenType.BOOL: Type.BOOL,
+        TokenType.STRING: Type.STRING,
+        TokenType.VOID: Type.VOID,
+        TokenType.DICT: Type.DICT,
+        TokenType.PAIR: Type.PAIR,
+        TokenType.LIST: Type.LIST,
+        TokenType.INT_VALUE: Type.INT,
+        TokenType.STRING_VALUE: Type.STRING,
+        TokenType.BOOL_VALUE: Type.BOOL,
+        TokenType.FLOAT_VALUE: Type.FLOAT
     }
 
     relation_operators = {
@@ -76,16 +84,16 @@ class Parser:
 
         return relation_operators.get(operator)
 
-    def _get_class_type(self, key=None, value=None):
-        classes = {
-            TokenType.LIST: ListType()
-        }
-
     def _consume_token(self) -> None:
+        if self.current_token:
+            self._previous_position = self._get_position()
         self.current_token = self.filter.try_build_token()
 
     def _get_position(self) -> Position:
         return self.current_token.position
+
+    def _get_previous_position(self) -> Position:
+        return self._previous_position
 
     def _can_be(self, token_types: set) -> Token | None:
         if (token := self.current_token).type not in token_types:
@@ -131,6 +139,7 @@ class Parser:
         self._must_be({TokenType.CURLY_OPEN})
         while statement := self._parse_statement():
             statements.append(statement)
+        self._must_be({TokenType.CURLY_CLOSE})
         return Block(statements=statements)
 
     # statement = { initialization | assignmentOrCall | return | ifStatement | whileLoop }
@@ -148,7 +157,7 @@ class Parser:
     # initialization = declaration, [assignment], ";"
     # declaration = type, id
     def _parse_initialization(self) -> Statement | None:
-        type = self._parse_type(is_function=False)
+        type = self._parse_type()
         if not type:
             return None
         id = self._must_be({TokenType.ID})
@@ -168,7 +177,7 @@ class Parser:
     # expression = conjunction, { "||", conjunction }
     def _parse_expression(self):
         if not (left := self._parse_conjunction()):
-            raise Exception
+            return None
         right = None
         if self.current_token.type == TokenType.OR:
             right = self._parse_conjunction()
@@ -192,12 +201,13 @@ class Parser:
 
     # relationTerm = additiveTerm, [relationOperator, additiveTerm]
     def _parse_relation_term(self):
-        left = self._parse_additive_term()
+        if not (left := self._parse_additive_term()):
+            return None
         right = None
         if operator := self._can_be(self.relation_operators):
             if not (right := self._parse_additive_term()):
                 raise Exception
-            return self._get_expression(operator, left, right)
+            return self._get_expression(operator.type, left, right)
         return RelationExpression(left, right)
 
     # additiveTerm = multiplicativeTerm, {("+" | "-"), multiplicativeTerm}
@@ -211,8 +221,8 @@ class Parser:
             if operator2 := self._can_be({TokenType.PLUS, TokenType.MINUS}):
                 if not (right_right := self._parse_additive_term()):
                     raise Exception
-                right = self._get_expression(operator2, right, right_right)
-        return self._get_expression(operator, left, right)
+                right = self._get_expression(operator2.type, right, right_right)
+        return BinaryExpression(left, right)
 
     # multiplicativeTerm = unaryApplication, {("*" | "/"), unaryApplication}
     def _parse_multiplicative_term(self):
@@ -225,25 +235,29 @@ class Parser:
             if operator2 := self._can_be({TokenType.MULTIPLY, TokenType.DIVIDE}):
                 if not (right_right := self._parse_multiplicative_term()):
                     raise Exception
-                right = self._get_expression(operator2, right, right_right)
-        return self._get_expression(operator, left, right)
+                right = self._get_expression(operator2.type, right, right_right)
+        return BinaryExpression(left, right)
 
     # unaryApplication = [ ( "-" | "!" ) ], castingIndexingTerm
     def _parse_unary_application(self):
-        if not (operator := self._can_be({TokenType.MINUS, TokenType.NEGATE})):
+        operator = self._can_be({TokenType.MINUS, TokenType.NEGATE})
+        if not (expression := self._parse_casting_indexing_term()):
             return None
-        expression = self._parse_casting_indexing_term()
-        return NegationExpression(expression) if operator == TokenType.NEGATE \
-            else UnarySubtractionExpression(expression)
+        if operator == TokenType.NEGATE:
+            return NegationExpression(expression)
+        elif operator == TokenType.MINUS:
+            return UnarySubtractionExpression(expression)
+        else:
+            return UnaryExpression(expression)
 
     # castingIndexingTerm = ["(", type, ")"], term, ["[", expression, "]"]
     def _parse_casting_indexing_term(self):
         type = expression = None
         if self._can_be({TokenType.ROUND_OPEN}):
-            type = self._parse_type(is_function=False)
+            type = self._parse_type()
             self._must_be({TokenType.ROUND_CLOSE})
         if not (term := self._parse_term()):
-            raise Exception
+            return None
         if self._can_be({TokenType.SQUARE_OPEN}):
             expression = self._parse_expression()
             self._must_be({TokenType.SQUARE_CLOSE})
@@ -253,27 +267,28 @@ class Parser:
     def _parse_term(self):
         expression = self._parse_literal() \
                      or self._parse_id_or_call() \
-                     or self._parse_linq_operation() \
+                     or self._parse_linq_expression() \
                      or self._parse_class_initialization()
 
         if not expression:
             if self._can_be({TokenType.ROUND_OPEN}):
                 expression = self._parse_expression()
+                self._must_be({TokenType.ROUND_CLOSE})
             else:
                 return None
 
-        return TermExpression(expression)
+        return expression
 
     # literal = bool | string | number | floatNumber
     def _parse_literal(self):
         if token := self._can_be({TokenType.BOOL_VALUE, TokenType.STRING_VALUE, TokenType.INT_VALUE,
                                   TokenType.FLOAT_VALUE}):
-            return LiteralExpression(value=token.value)
+            return LiteralExpression(type=(self.token_type_to_type[token.type]), value=token.value)
         return None
 
     # linqOperation = "from", expression, [ "where", expression ], [ "orderby", expression, ( "ASC", "DESC" ) ],
     # "select", expression, ";"
-    def _parse_linq_operation(self):
+    def _parse_linq_expression(self):
         where_expression = orderby_expression = orderby_sorting = None
         if not self._can_be({TokenType.FROM}):
             return None
@@ -432,53 +447,30 @@ class Parser:
                 or self._parse_function_type()
         return type
 
-    def _parse_function_type(self):
+    def _parse_function_type(self) -> BaseType | None:
         if not (token := self._can_be(self.function_type_set)):
             return None
-        return FunctionType(token.type)
+        return FunctionType(self.token_type_to_type[token.type])
 
     # type = "int" | "float" | "string" | "bool" | classType
-    def _parse_base_type(self) -> Type | None:
+    def _parse_base_type(self) -> BaseType | None:
         if not (token := self._can_be(self.base_type_set)):
             return None
-        return Type(token.type)
+        return BaseType(self.token_type_to_type[token.type])
 
     # classType = className, "<" type, [ ",", type ], ">"
     # className = "Dict" | "List" | "Pair"
-    def _parse_class_type(self) -> Type | None:
+    def _parse_class_type(self) -> BaseType | None:
         if not (token := self._can_be(self.class_type_set)):
             return None
         class_type = None
         self._must_be({TokenType.LESS})
-        first_param = self._parse_parameter()
+        first_type = self._parse_type()
         if token.type in self.key_value_type_set:
             self._must_be({TokenType.COMMA})
-            second_param = self._parse_parameter()
-            class_type = KeyValueType(token.type, first_param, second_param)
+            second_type = self._parse_type()
+            class_type = KeyValueType(self.token_type_to_type[token.type], first_type, second_type)
         self._must_be({TokenType.GREATER})
         if not class_type:
-            class_type = ValueType(token.type, first_param)
+            class_type = ElementType(self.token_type_to_type[token.type], first_type)
         return class_type
-        # if class_var := self._can_be(self.class_type_set):
-        #     class_type = class_var.type
-        #     self._must_be({TokenType.LESS})
-        #     first_parameter = self._must_be({self.base_type_set}).type
-        #     if class_type == TokenType.LIST:
-        #         type_obj = ValueType(class_type=class_type, value_type=first_parameter)
-        #     elif class_type == TokenType.PAIR or class_type == TokenType.DICT:
-        #         self._must_be({TokenType.COMMA})
-        #         second_parameter = self._must_be({self.base_type_set}).type
-        #         type_obj = KeyValueType(class_type=class_type, key_type=first_parameter, value_type=second_parameter)
-        #     else:
-        #         raise Exception
-        #     self._must_be({TokenType.GREATER})
-        #     return type_obj
-        # return None
-
-
-text = StringIO("int main() { return 0; }")
-scanner = Scanner(text)
-lexer = Lexer(scanner)
-filter = Filter(lexer)
-parser = Parser(filter)
-parser.parse_program()
