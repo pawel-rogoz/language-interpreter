@@ -45,12 +45,12 @@ class TestPosition:
     def test_position_after_newline(self):
         text = StringIO("\n")
         scanner = Scanner(text)
-        assert scanner.get_position() == Position(2, 1)
+        assert scanner.get_position() == Position(2, 0)
 
     def test_position_after_eof(self):
         text = StringIO("")
         scanner = Scanner(text)
-        assert scanner.get_position() == Position(1, 0)
+        assert scanner.get_position() == Position(1, 1)
 
     def test_position_after_one_char(self):
         text = StringIO("a")
@@ -61,12 +61,50 @@ class TestPosition:
         text = StringIO("a\n")
         scanner = Scanner(text)
         scanner.next_char()
-        assert scanner.get_position() == Position(2, 1)
+        assert scanner.get_position() == Position(2, 0)
 
     def test_char_after_windows_newline(self):
         text = StringIO("\r\na")
         scanner = Scanner(text)
         assert scanner.current_char == "\n"
+
+    def test_position_with_newlines(self):
+        text = StringIO("a\nb\nc")
+        scanner = Scanner(text)
+        positions = list()
+        while True:
+            positions.append(scanner.get_position())
+            if scanner.current_char == 'EOF':
+                break
+            scanner.next_char()
+        assert positions == [Position(1, 1), Position(2, 0), Position(2, 1), Position(3, 0), Position(3, 1), Position(3, 2)]
+
+    def test_position_multiple_in_one_line(self):
+        text = StringIO("a b c")
+        scanner = Scanner(text)
+        positions = list()
+        while True:
+            if scanner.current_char.isspace():
+                scanner.next_char()
+                continue
+            positions.append(scanner.get_position())
+            if scanner.current_char == 'EOF':
+                break
+            scanner.next_char()
+        assert positions == [Position(1, 1), Position(1, 3), Position(1, 5), Position(1, 6)]
+
+    def test_position_eof(self):
+        text = StringIO("")
+        scanner = Scanner(text)
+        assert scanner.get_position() == Position(1, 1)
+        assert scanner.get_char() == 'EOF'
+
+    def test_position_of_eof(self):
+        text = StringIO("a")
+        scanner = Scanner(text)
+        scanner.next_char()
+        assert scanner.get_position() == Position(1, 2)
+        assert scanner.get_char() == 'EOF'
 
 
 class TestEscapeCharacters:

@@ -6,9 +6,9 @@ from src.scanner.position import Position
 
 class Scanner:
     def __init__(self, source: Union[TextIOBase, StringIO]) -> None:
-        self.current_position = Position(1,0)
-        self.current_char = None
-        self.source = source
+        self.current_position: Position = Position(1, 0)
+        self.current_char: str | None = None
+        self.source: Union[TextIOBase, StringIO] = source
         self.next_char()
 
     # escape_characters = {
@@ -27,6 +27,7 @@ class Scanner:
         
         if not char:
             self.current_char = 'EOF'
+            self.current_position = self.current_position.next_column()
 
         elif char == "\n":
             self.current_char = "\n"
