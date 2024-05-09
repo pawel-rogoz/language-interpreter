@@ -67,6 +67,7 @@ class Lexer:
         "int": TokenType.INT,
         "float": TokenType.FLOAT,
         "string": TokenType.STRING,
+        "bool": TokenType.BOOL,
         "Pair": TokenType.PAIR,
         "List": TokenType.LIST,
         "Dict": TokenType.DICT,
