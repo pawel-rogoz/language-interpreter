@@ -102,8 +102,12 @@ class Parser:
         self._consume_token()
         return token
 
-    def _must_be(self, token_types: set, exception: Exception) -> Token:
+    def _must_be(self, token_types: set, exception: ParserError) -> Token:
+        # TODO -> don't create a new object every time you call _must_be()
         if (token := self.current_token).type not in token_types:
+            exception.expected_token = token_types
+            exception.actual_token = token.type
+            exception.position = token.position
             raise exception
 
         self._consume_token()
