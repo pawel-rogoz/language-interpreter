@@ -36,3 +36,7 @@ class IdOrCallMissingError(ParserError):
 
 class ClassDeclarationError(ParserError):
     pass
+
+
+class LinqExpressionError(ParserError):
+    pass
