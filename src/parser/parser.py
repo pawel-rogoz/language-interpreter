@@ -399,14 +399,14 @@ class Parser:
         return call, index
 
     # call = "(", { expression }, ")"
-    def _parse_call(self) -> list[Expression] | None:
+    def _parse_call(self) -> Expression | None:
         if not self._can_be({TokenType.ROUND_OPEN}):
             return None
         arguments = self._parse_arguments()
         self._must_be({TokenType.ROUND_CLOSE},
                       BracketMissingError("Expected round-close bracket",
                                           self._get_position()))
-        return arguments
+        return CallExpression(arguments)
 
     # index = expression
     def _parse_index(self) -> Expression | None:
