@@ -68,3 +68,6 @@ class TokenType(Enum):
     COMMA = auto()
     ASSIGN = auto()
     EOF = auto()
+
+    def __str__(self) -> str:
+        return f"{self.name}"
