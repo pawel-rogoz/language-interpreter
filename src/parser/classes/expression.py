@@ -56,6 +56,9 @@ class LiteralExpression(Expression):
         self._type: Type = type
         self._value = value
 
+    def __eq__(self, other):
+        return self.type == other.type and self.value == other.value
+
     @property
     def type(self):
         return self._type
@@ -68,15 +71,38 @@ class LiteralExpression(Expression):
 class IdOrCallExpression(Expression):
     def __init__(self, id, arguments, index, nested_id_or_call):
         self._id: str = id
-        self._arguments: list[Expression] = arguments
+        self._arguments: list[Expression] = arguments if arguments else None
         self._index: Expression = index
         self._nested_id_or_call: IdOrCallExpression = nested_id_or_call
+
+    def __eq__(self, other):
+        return (self.id == other.id and self.arguments == other.arguments and self.index == other.index
+                and self.nested_id_or_call == other.nested_id_or_call)
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def arguments(self):
+        return self._arguments
+
+    @property
+    def index(self):
+        return self._index
+
+    @property
+    def nested_id_or_call(self):
+        return self._nested_id_or_call
 
 
 class ClassInitializationExpression(Expression):
     def __init__(self, type, arguments):
         self._type: Type = type
         self._arguments: list[Expression] = arguments
+
+    def __eq__(self, other):
+        return self.type == other.type and self.arguments == other.arguments
 
     @property
     def type(self):
