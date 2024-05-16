@@ -7,6 +7,8 @@ from src.parser.classes.statement import *
 from src.parser.classes.expression import *
 from src.parser.classes.type import *
 from src.parser.classes.block import Block
+from src.parser.parser_error import *
+
 
 from io import StringIO, TextIOBase
 import pytest
@@ -99,4 +101,67 @@ class TestExpression:
         program = create_parser("int main() { bool a = 1 > 0; }").parse_program()
         expression = program.get_functions()["main"].block.statements[0].expression
         assert isinstance(expression, OrExpression)
+
+    def test_literal_expression(self):
+        parser = create_parser("190")
+        assert parser.parse_literal() == LiteralExpression(Type.INT, 190)
+
+    def test_class_initialization_expression(self):
+        parser = create_parser("new Dict<int,int>()")
+        assert parser.parse_class_initialization() == ClassInitializationExpression(
+            KeyValueType(Type.DICT, Type.INT, Type.INT),
+            list()
+        )
+
+    def test_id_or_call_expression(self):
+        parser = create_parser("id.call()")
+        assert parser.parse_id_or_call() == IdOrCallExpression('id', None, None, nested_id_or_call=IdOrCallExpression(
+            'call', None, None, None))
+
+
+class TestBaseAndFunctionType:
+    def test_int(self):
+        parser = create_parser("int")
+        assert parser.parse_type() == BaseType(Type.INT)
+
+    def test_string(self):
+        parser = create_parser("string")
+        assert parser.parse_type() == BaseType(Type.STRING)
+
+    def test_bool(self):
+        parser = create_parser("bool")
+        assert parser.parse_type() == BaseType(Type.BOOL)
+
+    def test_float(self):
+        parser = create_parser("float")
+        assert parser.parse_type() == BaseType(Type.FLOAT)
+
+
+class TestClassType:
+    def test_dict_type(self):
+        parser = create_parser("Dict<string,int>")
+        assert parser.parse_type() == KeyValueType(Type.DICT, Type.STRING, Type.INT)
+
+    def test_dict_not_enough_types_error(self):
+        parser = create_parser("Dict<string>")
+        with pytest.raises(ClassDeclarationError):
+            parser.parse_type()
+
+    def test_pair_type(self):
+        parser = create_parser("Pair<string,int>")
+        assert parser.parse_type() == KeyValueType(Type.PAIR, Type.STRING, Type.INT)
+
+    def test_pair_not_enough_types_error(self):
+        parser = create_parser("Pair<string>")
+        with pytest.raises(ClassDeclarationError):
+            parser.parse_type()
+
+    def test_list_type(self):
+        parser = create_parser("List<string>")
+        assert parser.parse_type() == ElementType(Type.LIST, Type.STRING)
+
+    def test_list_too_many_arguments_error(self):
+        parser = create_parser("List<string,int>")
+        with pytest.raises(ClassDeclarationError):
+            parser.parse_type()
 
