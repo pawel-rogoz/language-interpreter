@@ -44,3 +44,7 @@ class LinqExpressionError(ParserError):
 
 class IdOrCallExpressionError(ParserError):
     pass
+
+
+class IndexExpressionError(ParserError):
+    pass
