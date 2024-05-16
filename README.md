@@ -412,10 +412,9 @@ statement = { initialization
 
 initialization = declaration, [ assignment ], ";"
 declaration = type, id
-assignment = "=", ( expression | classInitialization )
-classInitialization = "new", className, "(", parameters, ")"
+assignment = "=", expression
 
-assignmentOrExpression = expression, [ "=", expression ], ";"
+assignmentOrExpression = expression, [ assignment ], ";"
 
 ifStatement = "if", "(", expression, ")", body, [ { "else if", "(", expression, ")", body }, "else", body ]
 whileLoop = "while", "(", expression, ")", body
@@ -432,6 +431,7 @@ term = literal | idOrCall | "(", expression, ")" | linqOperation
 
 literal = bool | string | number | floatNumber
 idOrCall = id, [ { [ ".", id ], "(", parameters, ")", } ], [ "[", expression, "]" ]
+classInitialization = "new", className, "(", parameters, ")"
 
 parameters = [ expression, { ",", expression } ]
 
