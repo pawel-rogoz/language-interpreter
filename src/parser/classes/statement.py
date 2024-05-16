@@ -41,23 +41,23 @@ class InitializationStatement(DeclarationStatement):
         return self._expression
 
 
-class IdOrCallStatement(Statement):
-    def __init__(self, id_or_call):
-        self._id_or_call: Expression = id_or_call
-
-    @property
-    def id_or_call(self):
-        return self._id_or_call
-
-
-class AssignmentStatement(IdOrCallStatement):
-    def __init__(self, id_or_call, expression):
-        super().__init__(id_or_call)
-        self._expression = expression
+class ExpressionStatement(Statement):
+    def __init__(self, expression):
+        self._expression: Expression = expression
 
     @property
     def expression(self):
         return self._expression
+
+
+class AssignmentStatement(ExpressionStatement):
+    def __init__(self, expression, assign_expression):
+        super().__init__(expression)
+        self._assign_expression = assign_expression
+
+    @property
+    def assign_expression(self):
+        return self._assign_expression
 
 
 class IfStatement(Statement):
