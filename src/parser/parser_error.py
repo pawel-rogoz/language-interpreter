@@ -40,3 +40,7 @@ class ClassDeclarationError(ParserError):
 
 class LinqExpressionError(ParserError):
     pass
+
+
+class IdOrCallExpressionError(ParserError):
+    pass
