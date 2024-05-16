@@ -364,13 +364,43 @@ class Parser:
     def parse_id_or_call(self) -> Expression | None:
         if not (id := self._can_be({TokenType.ID})):
             return None
+        left = right = None
         call, index = self._parse_call_or_index()
-        nested_id_or_call = None
-        if self._can_be({TokenType.DOT}):
-            if not (nested_id_or_call := self.parse_id_or_call()):
+        if call and index:
+            left = FunctionCallAndIndexExpression(id.value, call, index)
+        elif call:
+            left = FunctionCallExpression(id.value, call)
+        elif index:
+            left = IndexAccessExpression(id.value, index)
+        else:
+            left = IdExpression(id.value)
+        while self._can_be({TokenType.DOT}):
+            if not (right := self.parse_dot_expression()):
                 raise IdOrCallMissingError("Expected id after dot",
                                            self._get_position())
-        return IdOrCallExpression(id.value, call, index, nested_id_or_call)
+            return IdOrCallExpression(left, right)
+        return left
+
+    def parse_dot_expression(self) -> Expression | None:
+        if not (left := self.parse_single_dot_expression()):
+            return None
+        if self._can_be({TokenType.DOT}):
+            right = self.parse_dot_expression()
+            return DotCallExpression(left, right)
+        return left
+
+    def parse_single_dot_expression(self) -> Expression | None:
+        if not (id := self._can_be({TokenType.ID})):
+            return None
+        call, index = self._parse_call_or_index()
+        if call and index:
+            return MethodCallAndFieldAccessExpression(id.value, call, index)
+        elif call:
+            return MethodCallExpression(id.value, call)
+        elif index:
+            return IndexAccessExpression(id.value, index)
+        else:
+            return FieldAccessExpression(id.value)
 
     # callOrIndex = [ call ], [ index ]
     def _parse_call_or_index(self):
