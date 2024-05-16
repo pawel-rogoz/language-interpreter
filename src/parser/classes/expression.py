@@ -68,6 +68,15 @@ class LiteralExpression(Expression):
         return self._value
 
 
+class CallExpression(Expression):
+    def __init__(self, arguments):
+        self._arguments = arguments
+
+    @property
+    def arguments(self):
+        return self._arguments
+
+
 # IdOrCallExpression
 # inside can be either
 # FunctionCallExpression -> if we just have one id and ({arguments}), no dot
@@ -90,9 +99,9 @@ class IdExpression(Expression):
 
 
 class FunctionCallExpression(Expression):
-    def __init__(self, id: str, arguments: list[Expression]):
+    def __init__(self, id: str, call: CallExpression):
         self._id = id
-        self._arguments = arguments
+        self._call = call
 
 
 class DotCallChildrenExpression(Expression, ABC):
@@ -109,24 +118,24 @@ class FieldAccessExpression(DotCallChildrenExpression):
 
 
 class MethodCallExpression(DotCallChildrenExpression):
-    def __init__(self, id: str, arguments: list[Expression]):
+    def __init__(self, id: str, call: CallExpression):
         super().__init__(id)
-        self._arguments = arguments
+        self._call = call
 
     @property
-    def arguments(self):
-        return self._arguments
+    def call(self):
+        return self._call
 
 
 class MethodCallAndFieldAccessExpression(DotCallChildrenExpression):
-    def __init__(self, id: str, arguments: list[Expression], index: Expression):
+    def __init__(self, id: str, call: CallExpression, index: Expression):
         super().__init__(id)
-        self._arguments = arguments
+        self._call = call
         self._index = index
 
     @property
-    def arguments(self):
-        return self._arguments
+    def call(self):
+        return self._call
 
     @property
     def index(self):
@@ -144,14 +153,14 @@ class IndexAccessExpression(DotCallChildrenExpression):
 
 
 class FunctionCallAndIndexExpression(DotCallChildrenExpression):
-    def __init__(self, id: str, arguments: list[Expression], index: Expression):
+    def __init__(self, id: str, call: CallExpression, index: Expression):
         super().__init__(id)
-        self._arguments = arguments
+        self._call = call
         self._index = index
 
     @property
-    def arguments(self):
-        return self._arguments
+    def call(self):
+        return self._call
 
     @property
     def index(self):
