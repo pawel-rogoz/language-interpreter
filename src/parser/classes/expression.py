@@ -68,20 +68,61 @@ class LiteralExpression(Expression):
         return self._value
 
 
-class IdOrCallExpression(Expression):
-    def __init__(self, id, arguments, index, nested_id_or_call):
-        self._id: str = id
-        self._arguments: list[Expression] = arguments if arguments else None
-        self._index: Expression = index
-        self._nested_id_or_call: IdOrCallExpression = nested_id_or_call
+# IdOrCallExpression
+# inside can be either
+# FunctionCallExpression -> if we just have one id and ({arguments}), no dot
+# IdExpression -> if we have only id, no parentheses, no dot
+# DotCallExpression -> if we have at least one dot
+# DotCallExpression has its left and right side
+# left side can be an id expression (on first left side)
+# another expression can be either
+class IdOrCallExpression(BinaryExpression):
+    pass
 
-    def __eq__(self, other):
-        return (self.id == other.id and self.arguments == other.arguments and self.index == other.index
-                and self.nested_id_or_call == other.nested_id_or_call)
+
+class IdExpression(Expression):
+    def __init__(self, id):
+        self._id = id
 
     @property
     def id(self):
         return self._id
+
+
+class FunctionCallExpression(Expression):
+    def __init__(self, id: str, arguments: list[Expression]):
+        self._id = id
+        self._arguments = arguments
+
+
+class DotCallChildrenExpression(Expression, ABC):
+    def __init__(self, id: str):
+        self._id = id
+
+    @property
+    def id(self):
+        return self._id
+
+
+class FieldAccessExpression(DotCallChildrenExpression):
+    pass
+
+
+class MethodCallExpression(DotCallChildrenExpression):
+    def __init__(self, id: str, arguments: list[Expression]):
+        super().__init__(id)
+        self._arguments = arguments
+
+    @property
+    def arguments(self):
+        return self._arguments
+
+
+class MethodCallAndFieldAccessExpression(DotCallChildrenExpression):
+    def __init__(self, id: str, arguments: list[Expression], index: Expression):
+        super().__init__(id)
+        self._arguments = arguments
+        self._index = index
 
     @property
     def arguments(self):
@@ -91,9 +132,30 @@ class IdOrCallExpression(Expression):
     def index(self):
         return self._index
 
+
+class IndexAccessExpression(DotCallChildrenExpression):
+    def __init__(self, id: str, index: Expression):
+        super().__init__(id)
+        self._index = index
+
     @property
-    def nested_id_or_call(self):
-        return self._nested_id_or_call
+    def index(self):
+        return self._index
+
+
+class FunctionCallAndIndexExpression(DotCallChildrenExpression):
+    def __init__(self, id: str, arguments: list[Expression], index: Expression):
+        super().__init__(id)
+        self._arguments = arguments
+        self._index = index
+
+    @property
+    def arguments(self):
+        return self._arguments
+
+    @property
+    def index(self):
+        return self._index
 
 
 class ClassInitializationExpression(Expression):
@@ -162,6 +224,10 @@ class AdditionExpression(BinaryExpression):
 
 
 class SubtractionExpression(BinaryExpression):
+    pass
+
+
+class DotCallExpression(BinaryExpression):
     pass
 
 
