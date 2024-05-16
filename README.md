@@ -404,7 +404,7 @@ body = "{", { statement }, "}"
 functionArgument = declaration
 
 statement = { initialization
-            | assignmentOrCall
+            | assignmentOrExpression
             | return
             | ifStatement
             | whileLoop
@@ -415,7 +415,7 @@ declaration = type, id
 assignment = "=", ( expression | classInitialization )
 classInitialization = "new", className, "(", parameters, ")"
 
-assignmentOrCall = idOrCall, [ "=", expression ], ";"
+assignmentOrExpression = expression, [ "=", expression ], ";"
 
 ifStatement = "if", "(", expression, ")", body, [ { "else if", "(", expression, ")", body }, "else", body ]
 whileLoop = "while", "(", expression, ")", body
