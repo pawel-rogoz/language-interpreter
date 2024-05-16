@@ -153,7 +153,7 @@ class Parser:
     # statement = { initialization | assignmentOrCall | return | ifStatement | whileLoop }
     def parse_statement(self) -> Statement | None:
         statement = self.parse_initialization() \
-                    or self.parse_assignment_or_call() \
+                    or self.parse_assignment_or_expression() \
                     or self.parse_return_statement() \
                     or self.parse_if_statement() \
                     or self.parse_while_loop()
@@ -333,20 +333,20 @@ class Parser:
                                           self._get_position()))
         return ClassInitializationExpression(type, arguments)
 
-    # assignmentOrCall = idOrCall, [ "=", expression ], ";"
-    def parse_assignment_or_call(self) -> Statement | None:
-        expression = None
-        if not (id_or_call := self.parse_id_or_call()):
+    # assignmentOrExpression = expression, [ "=", expression ], ";"
+    def parse_assignment_or_expression(self) -> Statement | None:
+        assign_expression = None
+        if not (expression := self.parse_expression()):
             return None
         if self._can_be({TokenType.ASSIGN}):
-            if not (expression := self.parse_expression()):
+            if not (assign_expression := self.parse_expression()):
                 raise Exception
         self._must_be({TokenType.SEMICOLON},
                       SemicolonMissingError("Semicolon expected",
                                             self._get_position()))
-        if expression:
-            return AssignmentStatement(id_or_call, expression)
-        return IdOrCallStatement(id_or_call)
+        if assign_expression:
+            return AssignmentStatement(expression, assign_expression)
+        return ExpressionStatement(expression)
 
     # idOrCall = id, [ callOrIndex ], [ { "." id, [ callOrIndex ] } ]
     # callOrIndex = "(", parameters, ")", "[" expression, "]"
@@ -399,7 +399,7 @@ class Parser:
         return call, index
 
     # call = "(", { expression }, ")"
-    def _parse_call(self) -> Expression | None:
+    def _parse_call(self) -> CallExpression | None:
         if not self._can_be({TokenType.ROUND_OPEN}):
             return None
         arguments = self._parse_arguments()
@@ -545,7 +545,7 @@ class Parser:
         return class_type
 
 
-text = StringIO("a || b || c")
+text = StringIO("a.b().c().d[0].f")
 scanner = Scanner(text)
 lexer = Lexer(scanner)
 filter = Filter(lexer)
