@@ -189,67 +189,51 @@ class Parser:
     def parse_expression(self):
         if not (left := self.parse_conjunction()):
             return None
-        right = None
         if self._can_be({TokenType.OR}):
             if not (right := self.parse_expression()):
                 raise ExpressionMissingError("Expression after \'||\' expected", self._get_position())
-            if right.right is None:
-                right = right.left
-        return OrExpression(left, right)
+            return OrExpression(left, right)
+        return left
 
     # conjunction = relationTerm, { "&&", relationTerm }
     def parse_conjunction(self):
         if not (left := self.parse_relation_term()):
             return None
-        right = None
         if self._can_be({TokenType.AND}):
             if not (right := self.parse_conjunction()):
                 raise ExpressionMissingError("Expression after \'&&\' expected", self._get_position())
-            if right.right is None:
-                right = right.left
-        return AndExpression(left, right)
+            return AndExpression(left, right)
+        return left
 
     # relationTerm = additiveTerm, [relationOperator, additiveTerm]
     def parse_relation_term(self):
         if not (left := self.parse_additive_term()):
             return None
-        right = None
         if operator := self._can_be(self.relation_operators):
             if not (right := self.parse_relation_term()):
                 raise ExpressionMissingError("Expression after relation operator expected", self._get_position())
-            if right.right is None:
-                right = right.left
-        if operator:
             return self._get_expression(operator.type, left, right)
-        return RelationExpression(left, right)
+        return left
 
     # additiveTerm = multiplicativeTerm, {("+" | "-"), multiplicativeTerm}
     def parse_additive_term(self):
         if not (left := self.parse_multiplicative_term()):
             return None
-        right = None
         if operator := self._can_be({TokenType.PLUS, TokenType.MINUS}):
             if not (right := self.parse_additive_term()):
                 raise ExpressionMissingError("Expression after additive operator expected", self._get_position())
-            if right.right is None:
-                right = right.left
-        if operator:
             return self._get_expression(operator.type, left, right)
-        return BinaryExpression(left, right)
+        return left
 
     # multiplicativeTerm = unaryApplication, {("*" | "/"), unaryApplication}
     def parse_multiplicative_term(self):
         if not (left := self.parse_unary_application()):
             return None
-        right = None
         if operator := self._can_be({TokenType.MULTIPLY, TokenType.DIVIDE}):
             if not (right := self.parse_multiplicative_term()):
                 raise ExpressionMissingError("Expression after multiplicative operator expected", self._get_position())
-            if right.right is None:
-                right = right.left
-        if operator:
             return self._get_expression(operator.type, left, right)
-        return BinaryExpression(left, right)
+        return left
 
     # unaryApplication = [ ( "-" | "!" ) ], castingIndexingTerm
     def parse_unary_application(self):
@@ -257,7 +241,7 @@ class Parser:
         if not (expression := self.parse_casting_indexing_term()):
             return None
         if operator is None:
-            return UnaryExpression(expression)
+            return expression
         elif operator.type == TokenType.NEGATE:
             return NegationExpression(expression)
         elif operator.type == TokenType.MINUS:
@@ -265,20 +249,27 @@ class Parser:
 
     # castingIndexingTerm = ["(", type, ")"], term, ["[", expression, "]"]
     def parse_casting_indexing_term(self):
-        type = expression = None
+        type = index = None
         if self._can_be({TokenType.ROUND_OPEN}):
             type = self.parse_type()
             self._must_be({TokenType.ROUND_CLOSE},
                           BracketMissingError("Expected round-close bracket after casting expression",
                                               self._get_position()))
-        if not (term := self.parse_term()):
+        if not (expression := self.parse_term()):
             return None
         if self._can_be({TokenType.SQUARE_OPEN}):
-            expression = self.parse_expression()
+            index = self.parse_expression()
             self._must_be({TokenType.SQUARE_CLOSE},
                           BracketMissingError("Expected square-close bracket after indexing expression",
                                               self._get_position()))
-        return CastingExpression(expression=IndexingExpression(term, index=expression), type=type)
+        if index and type:
+            return CastingExpression(IndexingExpression(expression, index), type)
+        elif index:
+            return IndexingExpression(expression, index)
+        elif type:
+            return CastingExpression(expression, type)
+        else:
+            return expression
 
     # term = literal | idOrCall | "(", expression, ")" | linqOperation | classInitialization
     def parse_term(self):
@@ -364,7 +355,6 @@ class Parser:
     def parse_id_or_call(self) -> Expression | None:
         if not (id := self._can_be({TokenType.ID})):
             return None
-        left = right = None
         call, index = self._parse_call_or_index()
         if call and index:
             left = FunctionCallAndIndexExpression(id.value, call, index)
@@ -422,7 +412,8 @@ class Parser:
     def _parse_index(self) -> Expression | None:
         if not self._can_be({TokenType.SQUARE_OPEN}):
             return None
-        index = self.parse_expression()
+        if not (index := self.parse_expression()):
+            raise IndexExpressionError("", self._get_position())
         self._must_be({TokenType.SQUARE_CLOSE},
                       BracketMissingError("Expected round-close bracket",
                                           self._get_position()))
