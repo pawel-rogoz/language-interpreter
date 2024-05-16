@@ -75,9 +75,9 @@ class TestStatement:
         program = create_parser("int main() { if (1 > 0) { return 0; } else if (1 < 2) { return 1; } else { return -1; } }").parse_program()
         assert isinstance(program.get_functions()["main"].block.statements[0], IfStatement)
 
-    def test_id_or_call_statement(self):
+    def test_expression_statement(self):
         program = create_parser("int main() { main()[0]; }").parse_program()
-        assert isinstance(program.get_functions()["main"].block.statements[0], IdOrCallStatement)
+        assert isinstance(program.get_functions()["main"].block.statements[0], ExpressionStatement)
 
     def test_declaration_statement(self):
         program = create_parser("int main() { int a; }").parse_program()
@@ -100,7 +100,7 @@ class TestExpression:
     def test_relation_expression(self):
         program = create_parser("int main() { bool a = 1 > 0; }").parse_program()
         expression = program.get_functions()["main"].block.statements[0].expression
-        assert isinstance(expression, OrExpression)
+        assert isinstance(expression, GreaterExpression)
 
     def test_literal_expression(self):
         parser = create_parser("190")
@@ -112,11 +112,6 @@ class TestExpression:
             KeyValueType(Type.DICT, Type.INT, Type.INT),
             list()
         )
-
-    def test_id_or_call_expression(self):
-        parser = create_parser("id.call()")
-        assert parser.parse_id_or_call() == IdOrCallExpression('id', None, None, nested_id_or_call=IdOrCallExpression(
-            'call', None, None, None))
 
 
 class TestBaseAndFunctionType:
@@ -165,3 +160,51 @@ class TestClassType:
         with pytest.raises(ClassDeclarationError):
             parser.parse_type()
 
+
+class TestParseRelationTerm:
+    def test_greater_expression(self):
+        parser = create_parser("1 > 0")
+        assert isinstance(parser.parse_relation_term(), GreaterExpression)
+
+    def test_greater_equal_expression(self):
+        parser = create_parser("1 >= 0")
+        assert isinstance(parser.parse_relation_term(), GreaterEqualExpression)
+
+    def test_less_expression(self):
+        parser = create_parser("1 < 0")
+        assert isinstance(parser.parse_relation_term(), LessExpression)
+
+    def test_less_equal_expression(self):
+        parser = create_parser("1 <= 0")
+        assert isinstance(parser.parse_relation_term(), LessEqualExpression)
+
+    def test_equal_expression(self):
+        parser = create_parser("1 == 0")
+        assert isinstance(parser.parse_relation_term(), EqualExpression)
+
+    def test_not_equal_expression(self):
+        parser = create_parser("1 != 0")
+        assert isinstance(parser.parse_relation_term(), NotEqualExpression)
+
+
+class TestParseAdditiveTerm:
+    def test_add_expression(self):
+        parser = create_parser("1 + 1")
+        assert isinstance(parser.parse_additive_term(), AdditionExpression)
+
+    def test_subtract_expression(self):
+        parser = create_parser("1 - 1")
+        assert isinstance(parser.parse_additive_term(), SubtractionExpression)
+
+
+class TestParseMultiplicativeTerm:
+    def test_multiply_expression(self):
+        parser = create_parser("1 * 1")
+        assert isinstance(parser.parse_multiplicative_term(), MultiplicationExpression)
+
+    def test_divide_expression(self):
+        parser = create_parser("1 / 1")
+        assert isinstance(parser.parse_multiplicative_term(), DivisionExpression)
+
+
+# class TestP
