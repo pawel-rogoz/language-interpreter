@@ -197,7 +197,7 @@ class Parser:
             return None
         if self._can_be({TokenType.AND}):
             if not (right := self.parse_conjunction()):
-                raise ExpressionMissingError(message="Expression after \'&&\' expected", position=self._get_position())
+                raise ExpressionMissingError(message="Expression after \"&&\" expected", position=self._get_position())
             return AndExpression(left, right)
         return left
 

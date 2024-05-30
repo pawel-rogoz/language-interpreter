@@ -142,6 +142,16 @@ class TestClassType:
         with pytest.raises(ClassDeclarationError):
             parser.parse_type()
 
+    def test_dict_no_opening_arrow_types_error(self):
+        parser = create_parser("Dict string>")
+        with pytest.raises(ClassDeclarationError):
+            parser.parse_type()
+
+    def test_dict_no_closing_arrow_types_error(self):
+        parser = create_parser("Dict<string")
+        with pytest.raises(ClassDeclarationError):
+            parser.parse_type()
+
     def test_pair_type(self):
         parser = create_parser("Pair<string,int>")
         assert parser.parse_type() == KeyValueType(Type.PAIR, Type.STRING, Type.INT)
@@ -166,25 +176,55 @@ class TestParseRelationTerm:
         parser = create_parser("1 > 0")
         assert isinstance(parser.parse_relation_term(), GreaterExpression)
 
+    def test_no_expression_after_greater_operator_error(self):
+        parser = create_parser("1 > ")
+        with pytest.raises(ExpressionMissingError):
+            parser.parse_relation_term()
+
     def test_greater_equal_expression(self):
         parser = create_parser("1 >= 0")
         assert isinstance(parser.parse_relation_term(), GreaterEqualExpression)
+
+    def test_no_expression_after_greater_equal_operator_error(self):
+        parser = create_parser("1 >= ")
+        with pytest.raises(ExpressionMissingError):
+            parser.parse_relation_term()
 
     def test_less_expression(self):
         parser = create_parser("1 < 0")
         assert isinstance(parser.parse_relation_term(), LessExpression)
 
+    def test_no_expression_after_less_operator_error(self):
+        parser = create_parser("1 < ")
+        with pytest.raises(ExpressionMissingError):
+            parser.parse_relation_term()
+
     def test_less_equal_expression(self):
         parser = create_parser("1 <= 0")
         assert isinstance(parser.parse_relation_term(), LessEqualExpression)
+
+    def test_no_expression_after_less_equal_operator_error(self):
+        parser = create_parser("1 <= ")
+        with pytest.raises(ExpressionMissingError):
+            parser.parse_relation_term()
 
     def test_equal_expression(self):
         parser = create_parser("1 == 0")
         assert isinstance(parser.parse_relation_term(), EqualExpression)
 
+    def test_no_expression_after_equal_operator_error(self):
+        parser = create_parser("1 == ")
+        with pytest.raises(ExpressionMissingError):
+            parser.parse_relation_term()
+
     def test_not_equal_expression(self):
         parser = create_parser("1 != 0")
         assert isinstance(parser.parse_relation_term(), NotEqualExpression)
+
+    def test_no_expression_after_not_equal_operator_error(self):
+        parser = create_parser("1 != ")
+        with pytest.raises(ExpressionMissingError):
+            parser.parse_relation_term()
 
 
 class TestParseAdditiveTerm:
@@ -196,6 +236,16 @@ class TestParseAdditiveTerm:
         parser = create_parser("1 - 1")
         assert isinstance(parser.parse_additive_term(), SubtractionExpression)
 
+    def test_no_expression_after_addition_operator_error(self):
+        parser = create_parser("1 + ")
+        with pytest.raises(ExpressionMissingError):
+            parser.parse_additive_term()
+
+    def test_no_expression_after_subtraction_operator_error(self):
+        parser = create_parser("1 - ")
+        with pytest.raises(ExpressionMissingError):
+            parser.parse_additive_term()
+
 
 class TestParseMultiplicativeTerm:
     def test_multiply_expression(self):
@@ -206,5 +256,37 @@ class TestParseMultiplicativeTerm:
         parser = create_parser("1 / 1")
         assert isinstance(parser.parse_multiplicative_term(), DivisionExpression)
 
+    def test_no_expression_after_multiplication_operator_error(self):
+        parser = create_parser("1 * ")
+        with pytest.raises(ExpressionMissingError):
+            parser.parse_multiplicative_term()
 
-# class TestP
+    def test_no_expression_after_division_operator_error(self):
+        parser = create_parser("1 / ")
+        with pytest.raises(ExpressionMissingError):
+            parser.parse_multiplicative_term()
+
+
+class TestParseConjunction:
+    def test_parse_with_and(self):
+        parser = create_parser("1 && 1")
+        assert isinstance(parser.parse_conjunction(), AndExpression)
+
+    def test_parse_without_and(self):
+        parser = create_parser("1")
+        assert not isinstance(parser.parse_conjunction(), AndExpression)
+
+    def test_no_expression_after_and_error(self):
+        parser = create_parser("1 &&")
+        with pytest.raises(ExpressionMissingError):
+            parser.parse_conjunction()
+
+
+class TestParseExpression:
+    def test_parse_with_or(self):
+        parser = create_parser("1 || 1")
+        assert isinstance(parser.parse_expression(), OrExpression)
+
+    def test_no_expression_after_or_error(self):
+        parser = create_parser("1 || 1")
+        assert isinstance(parser.parse_expression(), OrExpression)
