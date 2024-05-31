@@ -63,3 +63,7 @@ class IdOrCallExpressionError(ParserError):
 
 class IndexExpressionError(ParserError):
     pass
+
+
+class MainNotImplementedError(ParserError):
+    pass

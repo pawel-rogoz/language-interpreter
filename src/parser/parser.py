@@ -123,6 +123,9 @@ class Parser:
             else:
                 functions.update({function_definition.name: function_definition})
 
+        if "main" not in functions.keys():
+            raise MainNotImplementedError(message=f"Function main must be implemented", position=None)
+
         return Program(functions)
 
     # functionDefinition = functionType, id, "(", [ functionParameter, { ",", functionParameter } ], ")", body
