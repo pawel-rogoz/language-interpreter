@@ -1,13 +1,16 @@
-from src.lexer.lexer import Lexer
-from src.lexer.lexer_error import LexerError
+import pytest
+
 from src.scanner.position import Position
 from src.scanner.scanner import Scanner
+
+from src.lexer.lexer import Lexer
+from src.lexer.lexer_error import LexerError
+
 from src.tokens.token_type import TokenType
 from src.tokens.token import Token
 from src.filter.filter import Filter
 
 from io import StringIO, TextIOBase
-import pytest
 
 
 class TestInit:
@@ -17,6 +20,7 @@ class TestInit:
         lexer = Lexer(scanner)
         filter = Filter(lexer)
         assert filter.lexer == lexer
+
 
 class TestComments:
     def test_filter_skip_comments(self):
