@@ -1,16 +1,14 @@
 from src.parser.parser import Parser
-from src.interpreter.interpreter_error import InterpreterError
-from src.interpreter.scope import *
+
+from src.interpreter.visitor import Visitor
 
 
 class Interpreter:
-    def __init__(self, parser: Parser):
+    def __init__(self, parser: Parser, visitor: Visitor):
         self._program = parser.parse_program()
+        self._visitor = visitor
 
     def interpret(self):
         program = self._program
-        functions = program.get_functions()
-        if "main" not in functions.keys():
-            raise InterpreterError(message="There is no function in given input")
-        scope = Scope(global_scope=GlobalScope(functions), local_scope=None)
-        return program.visit(scope)
+        visitor = self._visitor
+        return visitor.visit_program(program)
