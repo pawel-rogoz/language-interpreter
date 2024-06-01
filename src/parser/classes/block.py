@@ -1,7 +1,10 @@
-from src.parser.classes.statement import *
+from src.parser.classes.statement import Statement
+
+from src.interpreter.visitor import Visitor
+from src.interpreter.component import Component
 
 
-class Block:
+class Block(Component):
     def __init__(self, statements=None):
         if statements is None:
             statements = list()
@@ -13,3 +16,6 @@ class Block:
     @property
     def statements(self) -> list[Statement]:
         return self._statements
+
+    def accept(self, visitor: Visitor) -> None:
+        visitor.visit_block(self)
