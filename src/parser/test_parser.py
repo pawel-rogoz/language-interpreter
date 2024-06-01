@@ -3,14 +3,16 @@ from src.scanner.position import Position
 from src.scanner.scanner import Scanner
 from src.filter.filter import Filter
 from src.parser.parser import Parser
-from src.parser.classes.statement import *
-from src.parser.classes.expression import *
-from src.parser.classes.type import *
+from src.parser.classes.statement import ReturnStatement, IfStatement, ExpressionStatement, \
+    InitializationStatement, DeclarationStatement, WhileStatement, AssignmentStatement
+from src.parser.classes.expression import GreaterExpression, LiteralExpression, ClassInitializationExpression, \
+    GreaterEqualExpression, LessExpression, LessEqualExpression, EqualExpression, NotEqualExpression, \
+    AdditionExpression, SubtractionExpression, MultiplicationExpression, DivisionExpression, AndExpression, OrExpression
+from src.parser.classes.type import Type, BaseType, ElementType, FunctionType, KeyValueType
 from src.parser.classes.block import Block
-from src.parser.parser_error import *
+from src.parser.parser_error import ClassDeclarationError, ExpressionMissingError
 
-
-from io import StringIO, TextIOBase
+from io import StringIO
 import pytest
 
 
