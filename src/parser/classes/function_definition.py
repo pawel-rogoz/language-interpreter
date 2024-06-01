@@ -1,25 +1,24 @@
-from src.parser.classes.parameter import Parameter
-from src.parser.classes.block import Block
-from src.parser.classes.type import BaseType
-from src.scanner.position import Position
+from typing import TYPE_CHECKING
 
-from src.interpreter.visitor import Visitor
 from src.interpreter.component import Component
+
+if TYPE_CHECKING:
+    from src.scanner.position import Position
+
+    from src.parser.classes.parameter import Parameter
+    from src.parser.classes.block import Block
+    from src.parser.classes.type import BaseType
+
+    from src.interpreter.visitor import Visitor
 
 
 class FunctionDefinition(Component):
-    def __init__(self, name, type, parameters, block, position):
-        self.name: str = name
-        self.type: BaseType = type
-        self.parameters: list[Parameter] = parameters
-        self.block: Block = block
-        self.position: Position = position
+    def __init__(self, name: str, type: 'BaseType', parameters: ['Parameter'], block: 'Block', position: 'Position') -> None:
+        self.name = name
+        self.type = type
+        self.parameters = parameters
+        self.block = block
+        self.position = position
 
-    def accept(self, visitor: Visitor) -> None:
+    def accept(self, visitor: 'Visitor') -> None:
         visitor.visit_function_definition(self)
-
-    # def visit(self, scope: Scope):
-    #     result = self.block.visit(scope)
-    #     if result.type != self.type:
-    #         raise InterpreterError()
-    #     return result
