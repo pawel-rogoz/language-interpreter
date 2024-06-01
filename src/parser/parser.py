@@ -1,9 +1,9 @@
 from src.filter.filter import Filter
 from io import StringIO
 from src.lexer.lexer import Lexer
+from src.parser.classes.type import Type, BaseType, FunctionType, KeyValueType, ElementType
 from src.scanner.position import Position
 from src.scanner.scanner import Scanner
-from src.tokens.token_type import TokenType
 from src.tokens.token import Token
 
 from src.parser.classes.program import Program
@@ -12,11 +12,19 @@ from src.parser.classes.parameter import Parameter
 from src.parser.classes.block import Block
 from src.parser.classes.linq_expression import LINQExpression
 
-from src.parser.classes.type import *
-from src.parser.classes.expression import *
-from src.parser.classes.statement import *
-from src.parser.classes.if_parts import *
-from src.parser.parser_error import *
+from src.parser.classes.expression import Expression, GreaterExpression, GreaterEqualExpression, LessExpression, \
+    LessEqualExpression, EqualExpression, NotEqualExpression, AdditionExpression, SubtractionExpression, \
+    MultiplicationExpression, DivisionExpression, OrExpression, AndExpression, NegationExpression, \
+    UnarySubtractionExpression, CastingExpression, IndexingExpression, LiteralExpression, ClassInitializationExpression, \
+    FunctionCallAndIndexExpression, FunctionCallExpression, IndexAccessExpression, IdExpression, IdOrCallExpression, \
+    DotCallExpression, MethodCallAndFieldAccessExpression, MethodCallExpression, FieldAccessExpression, CallExpression
+from src.parser.classes.statement import Statement, DeclarationStatement, InitializationStatement, AssignmentStatement, \
+    ExpressionStatement, ReturnStatement, IfStatement, WhileStatement
+from src.parser.classes.if_parts import ElseIfPart, IfPart, ElsePart
+from src.parser.parser_error import ParserError, FunctionExistsError, MainNotImplementedError, IdMissingError, \
+    BracketMissingError, SemicolonMissingError, ExpressionMissingError, LinqExpressionError, ClassDeclarationError, \
+    IdOrCallMissingError, IndexExpressionError
+from src.tokens.token_type import TokenType
 
 
 class Parser:
