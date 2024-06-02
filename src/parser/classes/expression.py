@@ -6,7 +6,7 @@ from src.interpreter.component import Component
 from src.parser.classes.type import Type
 
 
-class Expression(ABC):
+class Expression(Component):
     @abstractmethod
     def __init__(self):
         pass
@@ -25,6 +25,10 @@ class BinaryExpression(Expression):
     def right(self) -> Expression:
         return self._right
 
+    @abstractmethod
+    def accept(self, visitor: 'Visitor') -> None:
+        pass
+
 
 class UnaryExpression(Expression):
     def __init__(self, expression: Expression):
@@ -33,6 +37,10 @@ class UnaryExpression(Expression):
     @property
     def expression(self) -> Expression:
         return self._expression
+
+    @abstractmethod
+    def accept(self, visitor: 'Visitor') -> None:
+        pass
 
 
 class CastingExpression(UnaryExpression, Component):
