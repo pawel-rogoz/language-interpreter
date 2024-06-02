@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from src.parser.classes.if_parts import IfPart, ElseIfPart, ElsePart
 
 
-class Statement(ABC):
+class Statement(Component):
     @abstractmethod
     def __init__(self):
         pass
