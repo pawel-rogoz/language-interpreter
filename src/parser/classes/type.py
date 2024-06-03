@@ -9,6 +9,12 @@ class BaseType:
     def __eq__(self, other):
         return self.type == other.type
 
+    def __str__(self):
+        return f"{self.type}"
+
+    def __hash__(self):
+        return hash(self._type)
+
     @property
     def type(self):
         return self._type
@@ -27,6 +33,9 @@ class KeyValueType(BaseType):
     def __eq__(self, other):
         return self.type == other.type and self.key_type == other.key_type and self.value_type == other.value_type
 
+    def __str__(self):
+        return f"{self._type} [ {self._key_type} : {self._value_type} ]"
+
     @property
     def key_type(self):
         return self._key_type
@@ -43,6 +52,9 @@ class ElementType(BaseType):
 
     def __eq__(self, other):
         return self.type == other.type and self.element_type == other.element_type
+
+    def __str__(self):
+        return f"{self._type} [{self._element_type}]"
 
     @property
     def element_type(self):
