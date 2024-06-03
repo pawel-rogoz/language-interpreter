@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from src.interpreter.component import Component
+from src.interpreter.base_function_definition import BaseFunctonDefinition
 
 if TYPE_CHECKING:
     from src.scanner.position import Position
@@ -12,11 +12,11 @@ if TYPE_CHECKING:
     from src.interpreter.visitor import Visitor
 
 
-class FunctionDefinition(Component):
+class FunctionDefinition(BaseFunctonDefinition):
     def __init__(self, name: str, type: 'BaseType', parameters: ['Parameter'], block: 'Block', position: 'Position') -> None:
+        super().__init__(parameters)
         self.name = name
         self.type = type
-        self.parameters = parameters
         self.block = block
         self.position = position
 
