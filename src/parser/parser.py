@@ -17,7 +17,7 @@ from src.parser.classes.expression import Expression, GreaterExpression, Greater
     MultiplicationExpression, DivisionExpression, OrExpression, AndExpression, NegationExpression, \
     UnarySubtractionExpression, CastingExpression, IndexingExpression, LiteralExpression, ClassInitializationExpression, \
     FunctionCallAndIndexExpression, FunctionCallExpression, IndexAccessExpression, IdExpression, IdOrCallExpression, \
-    DotCallExpression, MethodCallAndFieldAccessExpression, MethodCallExpression, FieldAccessExpression, CallExpression
+    DotCallExpression, MethodCallAndFieldAccessExpression, MethodCallExpression, FieldAccessExpression
 from src.parser.classes.statement import Statement, DeclarationStatement, InitializationStatement, AssignmentStatement, \
     ExpressionStatement, ReturnStatement, IfStatement, WhileStatement
 from src.parser.classes.if_parts import ElseIfPart, IfPart, ElsePart
@@ -181,8 +181,8 @@ class Parser:
         expression = self._parse_assignment()
         self._must_be({TokenType.SEMICOLON}, SemicolonMissingError())
         if not expression:
-            return DeclarationStatement(type, id)
-        return InitializationStatement(type, id, expression)
+            return DeclarationStatement(type, id.value)
+        return InitializationStatement(type, id.value, expression)
 
     # assignment = "=", expression
     def _parse_assignment(self) -> Expression | None:
@@ -352,9 +352,9 @@ class Parser:
         if not (id := self._can_be({TokenType.ID})):
             return None
         arguments, index = self._parse_arguments_or_index()
-        if arguments and index:
+        if arguments is not None and index:
             left = FunctionCallAndIndexExpression(id.value, arguments, index)
-        elif arguments:
+        elif arguments is not None:
             left = FunctionCallExpression(id.value, arguments)
         elif index:
             left = IndexAccessExpression(id.value, index)
@@ -437,7 +437,7 @@ class Parser:
         if not (expression := self._parse_if_expression()):
             raise ExpressionMissingError(message="Expected condition expression inside of \"if\"", position=self._get_position())
         block = self.parse_block()
-        if_part = IfPart(expression, block)
+        if_part = IfPart(block, expression)
         while self._can_be({TokenType.ELSE}):
             if self._can_be({TokenType.IF}):
                 if not (expression := self._parse_if_expression()):
@@ -520,7 +520,7 @@ class Parser:
         return class_type
 
 
-text = StringIO("a.b().c().d[0].f")
+text = StringIO("a()")
 scanner = Scanner(text)
 lexer = Lexer(scanner)
 filter = Filter(lexer)
