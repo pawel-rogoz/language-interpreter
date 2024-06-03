@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from src.interpreter.visitor import Visitor
 from src.interpreter.component import Component
 
-from src.parser.classes.type import Type
+from src.parser.classes.type import Type, BaseType
 
 
 class Expression(Component):
@@ -44,12 +44,12 @@ class UnaryExpression(Expression):
 
 
 class CastingExpression(UnaryExpression, Component):
-    def __init__(self, expression, type=None):
+    def __init__(self, expression, type: BaseType = None):
         super().__init__(expression)
         self._type = type
 
     @property
-    def type(self):
+    def type(self) -> BaseType:
         return self._type
 
     def accept(self, visitor: Visitor) -> None:
@@ -57,12 +57,12 @@ class CastingExpression(UnaryExpression, Component):
 
 
 class IndexingExpression(UnaryExpression, Component):
-    def __init__(self, expression, index=None):
+    def __init__(self, expression, index: Expression):
         super().__init__(expression)
         self._index = index
 
     @property
-    def index(self):
+    def index(self) -> Expression:
         return self._index
 
     def accept(self, visitor: Visitor) -> None:
@@ -88,19 +88,6 @@ class LiteralExpression(Expression, Component):
     def accept(self, visitor: Visitor) -> None:
         visitor.visit_literal_expression(self)
 
-
-class CallExpression(Expression, Component):
-    def __init__(self, arguments):
-        self._arguments = arguments
-
-    @property
-    def arguments(self):
-        return self._arguments
-
-    def accept(self, visitor: Visitor) -> None:
-        visitor.visit_call_expression(self)
-
-
 # IdOrCallExpression
 # inside can be either
 # FunctionCallExpression -> if we just have one id and ({arguments}), no dot
@@ -109,17 +96,19 @@ class CallExpression(Expression, Component):
 # DotCallExpression has its left and right side
 # left side can be an id expression (on first left side)
 # another expression can be either
+
+
 class IdOrCallExpression(BinaryExpression, Component):
     def accept(self, visitor: Visitor) -> None:
         visitor.visit_id_or_call_expression(self)
 
 
 class IdExpression(Expression, Component):
-    def __init__(self, id):
+    def __init__(self, id: str):
         self._id = id
 
     @property
-    def id(self):
+    def id(self) -> str:
         return self._id
 
     def accept(self, visitor: Visitor):
@@ -127,20 +116,26 @@ class IdExpression(Expression, Component):
 
 
 class FunctionCallExpression(Expression, Component):
-    def __init__(self, id: str, call: CallExpression):
+    def __init__(self, id: str, arguments: [Expression]):
         self._id = id
-        self._call = call
+        self._arguments = arguments
+
+    @property
+    def id(self) -> str:
+        return self._id
+
+    @property
+    def arguments(self) -> [Expression]:
+        return self._arguments
 
     def accept(self, visitor: Visitor) -> None:
         visitor.visit_function_call_expression(self)
 
-    # def visit(self, scope: Scope):
-    #     if self._id in scope.global_scope.functions.keys():
-    #         self._call.visit(scope)
-    #     raise InterpreterError()
-
 
 class DotCallChildrenExpression(Expression):
+    def accept(self, visitor: 'Visitor') -> None:
+        pass
+
     def __init__(self, id: str):
         self._id = id
 
@@ -155,27 +150,27 @@ class FieldAccessExpression(DotCallChildrenExpression, Component):
 
 
 class MethodCallExpression(DotCallChildrenExpression, Component):
-    def __init__(self, id: str, call: CallExpression):
+    def __init__(self, id: str, arguments: [Expression]):
         super().__init__(id)
-        self._call = call
+        self._arguments = arguments
 
     @property
-    def call(self):
-        return self._call
+    def arguments(self):
+        return self._arguments
 
     def accept(self, visitor: Visitor) -> None:
         visitor.visit_method_call_expression(self)
 
 
 class MethodCallAndFieldAccessExpression(DotCallChildrenExpression, Component):
-    def __init__(self, id: str, call: CallExpression, index: Expression):
+    def __init__(self, id: str, arguments: [Expression], index: Expression):
         super().__init__(id)
-        self._call = call
+        self._arguments = arguments
         self._index = index
 
     @property
-    def call(self):
-        return self._call
+    def arguments(self):
+        return self._arguments
 
     @property
     def index(self):
@@ -199,14 +194,14 @@ class IndexAccessExpression(DotCallChildrenExpression, Component):
 
 
 class FunctionCallAndIndexExpression(DotCallChildrenExpression, Component):
-    def __init__(self, id: str, call: CallExpression, index: Expression):
+    def __init__(self, id: str, arguments: [Expression], index: Expression):
         super().__init__(id)
-        self._call = call
+        self._arguments = arguments
         self._index = index
 
     @property
-    def call(self):
-        return self._call
+    def arguments(self):
+        return self._arguments
 
     @property
     def index(self):
@@ -240,32 +235,10 @@ class OrExpression(BinaryExpression, Component):
     def accept(self, visitor: Visitor) -> None:
         visitor.visit_or_expression(self)
 
-    # def visit(self, scope: Scope) -> BaseValue:
-    #     left = self.left.visit(scope)
-    #     if not isinstance(left, bool):
-    #         raise InterpreterError()
-    #     if left:
-    #         return BaseValue(BaseType(Type.BOOL), True)
-    #     right = self.right.visit(scope)
-    #     if not isinstance(right, bool):
-    #         raise InterpreterError()
-    #     return BaseValue(BaseType(Type.BOOL), right)
-
 
 class AndExpression(BinaryExpression, Component):
     def accept(self, visitor: Visitor) -> None:
         visitor.visit_and_expression()
-
-    # def visit(self, scope: Scope) -> BaseValue:
-    #     left = self.left.visit(scope)
-    #     if not isinstance(left, bool):
-    #         raise InterpreterError()
-    #     if not left:
-    #         return BaseValue(BaseType(Type.BOOL), False)
-    #     right = self.right.visit(scope)
-    #     if not isinstance(right, bool):
-    #         raise InterpreterError()
-    #     return BaseValue(BaseType(Type.BOOL), right)
 
 
 class RelationExpression(BinaryExpression):
@@ -276,146 +249,50 @@ class GreaterExpression(RelationExpression, Component):
     def accept(self, visitor: Visitor) -> None:
         visitor.visit_greater_expression(self)
 
-    # def visit(self, scope: Scope) -> BaseValue:
-    #     left = self.left.visit(scope)
-    #     right = self.right.visit(scope)
-    #     if not isinstance(left, type(right)):
-    #         raise InterpreterError()
-    #     if not isinstance(left, Union[int, float]):
-    #         raise InterpreterError()
-    #     return BaseValue(BaseType(Type.BOOL), left > right)
-
 
 class LessExpression(RelationExpression, Component):
     def accept(self, visitor: Visitor) -> None:
         visitor.visit_less_expression(self)
-
-    # def visit(self, scope: Scope) -> BaseValue:
-    #     left = self.left.visit(scope)
-    #     right = self.right.visit(scope)
-    #     if not isinstance(left, type(right)):
-    #         raise InterpreterError()
-    #     if not isinstance(left, Union[int, float]):
-    #         raise InterpreterError()
-    #     return BaseValue(BaseType(Type.BOOL), left < right)
 
 
 class GreaterEqualExpression(RelationExpression, Component):
     def accept(self, visitor: Visitor) -> None:
         visitor.visit_greater_equal_expression(self)
 
-    # def visit(self, scope: Scope) -> BaseValue:
-    #     left = self.left.visit(scope)
-    #     right = self.right.visit(scope)
-    #     if not isinstance(left, type(right)):
-    #         raise InterpreterError()
-    #     if not isinstance(left, Union[int, float]):
-    #         raise InterpreterError()
-    #     return BaseValue(BaseType(Type.BOOL), left >= right)
-
 
 class LessEqualExpression(RelationExpression, Component):
     def accept(self, visitor: Visitor) -> None:
         visitor.visit_less_equal_expression(self)
-
-    # def visit(self, scope: Scope) -> BaseValue:
-    #     left = self.left.visit(scope)
-    #     right = self.right.visit(scope)
-    #     if not isinstance(left, type(right)):
-    #         raise InterpreterError()
-    #     if not isinstance(left, Union[int, float]):
-    #         raise InterpreterError()
-    #     return BaseValue(BaseType(Type.BOOL), left <= right)
 
 
 class EqualExpression(RelationExpression, Component):
     def accept(self, visitor: Visitor) -> None:
         visitor.visit_equal_expression(self)
 
-    # def visit(self, scope: Scope) -> BaseValue:
-    #     left = self.left.visit(scope)
-    #     right = self.right.visit(scope)
-    #     if not isinstance(left, type(right)):
-    #         raise InterpreterError()
-    #     return BaseValue(BaseType(Type.BOOL), left == right)
-
 
 class NotEqualExpression(RelationExpression, Component):
     def accept(self, visitor: Visitor) -> None:
         visitor.visit_not_equal_expression(self)
-
-    # def visit(self, scope: Scope) -> BaseValue:
-    #     left = self.left.visit(scope)
-    #     right = self.right.visit(scope)
-    #     if not isinstance(left, type(right)):
-    #         raise InterpreterError()
-    #     return BaseValue(BaseType(Type.BOOL), left != right)
 
 
 class MultiplicationExpression(BinaryExpression, Component):
     def accept(self, visitor: Visitor) -> None:
         visitor.visit_multiplication_expression(self)
 
-    # def visit(self, scope: Scope) -> BaseValue:
-    #     left = self.left.visit(scope)
-    #     right = self.right.visit(scope)
-    #     if isinstance(left or right, str):
-    #         if not isinstance(left or right, int):
-    #             raise InterpreterError()
-    #         return BaseValue(BaseType(Type.STRING), left * right)
-    #     if isinstance(left or right, int):
-    #         if isinstance(left or right, float):
-    #             return BaseValue(BaseType(Type.FLOAT), left * right)
-    #         if not isinstance(left and right, int):
-    #             raise InterpreterError()
-    #     return BaseValue(BaseType(Type.INT), left * right)
-
 
 class DivisionExpression(BinaryExpression, Component):
     def accept(self, visitor: Visitor) -> None:
         visitor.visit_division_expression(self)
-
-    # def visit(self, scope: Scope) -> BaseValue:
-    #     left = self.left.visit(scope)
-    #     right = self.right.visit(scope)
-    #     if isinstance(left or right, int):
-    #         if isinstance(left or right, float):
-    #             return BaseValue(BaseType(Type.FLOAT), left / right)
-    #         elif isinstance(left and right, int):
-    #             return BaseValue(BaseType(Type.INT), left / right)
-    #     raise InterpreterError()
 
 
 class AdditionExpression(BinaryExpression, Component):
     def accept(self, visitor: Visitor) -> None:
         visitor.visit_addition_expression(self)
 
-    # def visit(self, scope: Scope) -> BaseValue:
-    #     left = self.left.visit(scope)
-    #     right = self.right.visit(scope)
-    #     if isinstance(left or right, int):
-    #         if isinstance(left or right, float):
-    #             return BaseValue(BaseType(Type.FLOAT), left + right)
-    #         elif isinstance(left and right, int):
-    #             return BaseValue(BaseType(Type.INT), left + right)
-    #     if isinstance(left and right, str):
-    #         return BaseValue(BaseType(Type.STRING), left + right)
-    #     raise InterpreterError()
-
 
 class SubtractionExpression(BinaryExpression, Component):
     def accept(self, visitor: Visitor) -> None:
         visitor.visit_subtraction_expression(self)
-
-    # def visit(self, scope: Scope) -> BaseValue:
-    #     left = self.left.visit(scope)
-    #     right = self.right.visit(scope)
-    #     if isinstance(left or right, int):
-    #         if isinstance(left or right, float):
-    #             return BaseValue(BaseType(Type.FLOAT), left - right)
-    #         elif isinstance(left and right, int):
-    #             return BaseValue(BaseType(Type.INT), left - right)
-    #     raise InterpreterError()
 
 
 class DotCallExpression(BinaryExpression, Component):
@@ -427,28 +304,10 @@ class NegationExpression(UnaryExpression, Component):
     def accept(self, visitor: Visitor) -> None:
         visitor.visit_negation_expression(self)
 
-    # def visit(self, scope: Scope) -> BaseValue:
-    #     expression = self.expression.visit(scope)
-    #     if isinstance(expression, int):
-    #         return BaseValue(BaseType(Type.INT), not expression)
-    #     elif isinstance(expression, float):
-    #         return BaseValue(BaseType(Type.FLOAT), not expression)
-    #     elif isinstance(expression, bool):
-    #         return BaseValue(BaseType(Type.BOOL), not bool)
-    #     raise InterpreterError()
-
 
 class UnarySubtractionExpression(UnaryExpression, Component):
     def accept(self, visitor: Visitor) -> None:
         visitor.visit_unary_subtraction_expression(self)
-
-    # def visit(self, scope: Scope) -> BaseValue:
-    #     expression = self.expression.visit(scope)
-    #     if isinstance(expression, int):
-    #         return BaseValue(BaseType(Type.INT), -expression)
-    #     elif isinstance(expression, float):
-    #         return BaseValue(BaseType(Type.FLOAT), -expression)
-    #     raise InterpreterError()
 
 
 class TermExpression(UnaryExpression, Component):

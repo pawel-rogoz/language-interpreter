@@ -351,11 +351,11 @@ class Parser:
     def parse_id_or_call(self) -> Expression | None:
         if not (id := self._can_be({TokenType.ID})):
             return None
-        call, index = self._parse_call_or_index()
-        if call and index:
-            left = FunctionCallAndIndexExpression(id.value, call, index)
-        elif call:
-            left = FunctionCallExpression(id.value, call)
+        arguments, index = self._parse_arguments_or_index()
+        if arguments and index:
+            left = FunctionCallAndIndexExpression(id.value, arguments, index)
+        elif arguments:
+            left = FunctionCallExpression(id.value, arguments)
         elif index:
             left = IndexAccessExpression(id.value, index)
         else:
@@ -378,29 +378,32 @@ class Parser:
     def parse_single_dot_expression(self) -> Expression | None:
         if not (id := self._can_be({TokenType.ID})):
             return None
-        call, index = self._parse_call_or_index()
-        if call and index:
-            return MethodCallAndFieldAccessExpression(id.value, call, index)
-        elif call:
-            return MethodCallExpression(id.value, call)
+        arguments, index = self._parse_arguments_or_index()
+        if arguments and index:
+            return MethodCallAndFieldAccessExpression(id.value, arguments, index)
+        elif arguments:
+            return MethodCallExpression(id.value, arguments)
         elif index:
             return IndexAccessExpression(id.value, index)
         else:
             return FieldAccessExpression(id.value)
 
     # callOrIndex = [ call ], [ index ]
-    def _parse_call_or_index(self):
-        call = self._parse_call()
+    def _parse_arguments_or_index(self):
+        arguments = self._parse_arguments()
         index = self._parse_index()
-        return call, index
+        return arguments, index
 
     # call = "(", { expression }, ")"
-    def _parse_call(self) -> CallExpression | None:
+    # arguments = [ argument, { ",", argument } ]
+    def _parse_arguments(self) -> [Expression]:
         if not self._can_be({TokenType.ROUND_OPEN}):
             return None
-        arguments = self._parse_arguments()
+        arguments = list()
+        while argument := self._parse_argument():
+            arguments.append(argument)
         self._must_be({TokenType.ROUND_CLOSE}, BracketMissingError())
-        return CallExpression(arguments)
+        return arguments
 
     # index = expression
     def _parse_index(self) -> Expression | None:
@@ -410,13 +413,6 @@ class Parser:
             raise IndexExpressionError("", self._get_position())
         self._must_be({TokenType.SQUARE_CLOSE}, BracketMissingError())
         return index
-
-    # arguments = [ argument, { ",", argument } ]
-    def _parse_arguments(self) -> list[Expression]:
-        arguments = list()
-        while argument := self._parse_argument():
-            arguments.append(argument)
-        return arguments
 
     # argument = expression
     def _parse_argument(self) -> Expression | None:
