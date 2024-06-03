@@ -8,7 +8,7 @@ class Variable:
         self._type = type
         self._id = id
         if value.type != self._type:
-            raise InterpreterError()
+            raise InterpreterError(message=f"Can't assign value type: {value.type} to variable type: {self._type}")
         self._value = value
 
     @property
