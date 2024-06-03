@@ -18,6 +18,7 @@ if TYPE_CHECKING:
                                                SubtractionExpression, DotCallExpression, NegationExpression,
                                                UnarySubtractionExpression, TermExpression)
     from src.parser.classes.linq_expression import LINQExpression
+    from src.interpreter.embedded_functions import PrintFunctionDefinition
 
 
 class Visitor(ABC):
@@ -71,10 +72,6 @@ class Visitor(ABC):
 
     @abstractmethod
     def visit_literal_expression(self, element: 'LiteralExpression'):
-        pass
-
-    @abstractmethod
-    def visit_call_expression(self, element: 'CallExpression'):
         pass
 
     @abstractmethod
@@ -179,4 +176,8 @@ class Visitor(ABC):
 
     @abstractmethod
     def visit_linq_expression(self, element: 'LINQExpression'):
+        pass
+
+    @abstractmethod
+    def visit_print_function(self, element: 'PrintFunctionDefinition'):
         pass
