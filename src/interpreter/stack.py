@@ -56,7 +56,7 @@ class ExecutionStack:
         self._current_context: Optional[FunctionContext] = None
 
     @property
-    def function_stacks(self) -> [FunctionContext]:
+    def function_contexts(self) -> [FunctionContext]:
         return self._function_contexts
 
     @property
