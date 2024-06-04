@@ -326,10 +326,13 @@ class Parser:
             return None
         if not (type := self.parse_class_type()):
             raise ClassDeclarationError(message="Expected class type", position=self._get_position())
-        self._must_be({TokenType.ROUND_OPEN}, BracketMissingError())
         arguments = self._parse_arguments()
-        self._must_be({TokenType.ROUND_CLOSE}, BracketMissingError())
         return ClassInitializationExpression(type, arguments)
+
+    def _parse_class_initialization_type(self):
+        if type := self._can_be(self.class_type_set):
+            return type
+        return None
 
     # assignmentOrExpression = expression, [ "=", expression ], ";"
     def parse_assignment_or_expression(self) -> Statement | None:
@@ -402,6 +405,7 @@ class Parser:
         arguments = list()
         while argument := self._parse_argument():
             arguments.append(argument)
+            self._can_be({TokenType.COMMA})
         self._must_be({TokenType.ROUND_CLOSE}, BracketMissingError())
         return arguments
 
@@ -520,10 +524,10 @@ class Parser:
         return class_type
 
 
-text = StringIO("a()")
+text = StringIO("Pair<int, int> a = new Pair<int,int>(1,1);")
 scanner = Scanner(text)
 lexer = Lexer(scanner)
 filter = Filter(lexer)
 parser = Parser(filter)
-expression = parser.parse_expression()
+expression = parser.parse_initialization()
 expression
