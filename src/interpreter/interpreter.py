@@ -43,6 +43,8 @@ class Interpreter(Visitor):
         self._execution_stack = ExecutionStack()
         self._last_result: Optional[Value] = None
         self._was_return = False
+        self._max_recursion = 100
+        self._current_recursion = 1
 
     system_methods = {
         # 'keys',
@@ -81,6 +83,11 @@ class Interpreter(Visitor):
         if key in self._functions_definition.keys():
             return self._functions_definition[key]
         return None
+
+    def _stop_program_execution(self):
+        fun_stack_length = len(self._execution_stack.function_contexts)
+        if self._current_recursion > self._max_recursion or fun_stack_length > self._max_recursion:
+            raise InterpreterError(message=f"Maximum recursion. Program stopped")
 
     def _get_left_and_right_element(self, element: 'BinaryExpression') -> tuple[Value, Value]:
         element.left.accept(self)
@@ -151,25 +158,28 @@ class Interpreter(Visitor):
         element.block.accept(self)
 
     def visit_while_statement(self, element: 'WhileStatement'):
+        self._current_recursion += 1
+        self._stop_program_execution()
         if self._execute_condition_expression_and_block(element):
             if self._was_return:
                 return
             self.visit_while_statement(element)
+        self._current_recursion = 1
 
     def visit_linq_expression(self, element: 'LINQExpression'):
         pass
 
     def visit_casting_expression(self, element: 'CastingExpression') -> None:
-        casting_type = element.type.type
+        casting_type = element.type
         expression = self._get_expression_from_element(element)
         expression_type = expression.type
-        if casting_type == Type.STRING:
-            if expression_type in {Type.INT, Type.FLOAT, Type.BOOL}:
+        if casting_type == BaseType(Type.STRING):
+            if expression_type in {BaseType(Type.INT), BaseType(Type.FLOAT), BaseType(Type.BOOL)}:
                 self._last_result = Value(BaseType(Type.STRING), f"{expression.value}")
             else:
                 raise InterpreterError(f"Cannot cast {expression_type} to {casting_type}")
-        elif casting_type == Type.INT:
-            if expression_type in {Type.FLOAT, Type.BOOL}:
+        elif casting_type == BaseType(Type.INT):
+            if expression_type in {BaseType(Type.FLOAT), BaseType(Type.BOOL)}:
                 self._last_result = Value(BaseType(Type.INT), int(expression.value))
             else:
                 raise InterpreterError(f"Cannot cast {expression_type} to {casting_type}")
@@ -216,18 +226,17 @@ class Interpreter(Visitor):
 
             function_context, block_variables = FunctionContext(), BlockVariables()
 
-            self._push_function_context(function_context)
-            self._push_block_variables(block_variables)
-
             for i in range(0, len(function_arguments)):
                 param_type, param_id = params[i].type, params[i].id
                 function_arguments[i].accept(self)
                 argument = self._last_result
                 if argument.type == param_type:
-                    self._add_variable(Variable(argument.type, param_id, argument))
+                    block_variables.add_variable(Variable(argument.type, param_id, argument))
                 else:
-                    raise InterpreterError(f"Param: {param_id} takes value type {param_type}, not {argument.type}")
+                    raise InterpreterError(message=f"Param: {param_id} takes value type {param_type}, not {argument.type}")
 
+            self._push_function_context(function_context)
+            self._push_block_variables(block_variables)
             function_definition.accept(self)
 
             self._pop_block_variables()
@@ -290,7 +299,64 @@ class Interpreter(Visitor):
                 current_result.value.add_value(arguments)
 
     def visit_class_initialization_expression(self, element: 'ClassInitializationExpression'):
-        pass
+        type = element.type
+        arguments = element.arguments
+        result = None
+        if isinstance(type, ElementType):
+            result = self._handle_element_type_arguments(type, arguments)
+        elif isinstance(type, KeyValueType):
+            if type.type == Type.PAIR:
+                result = self._handle_pair_type_arguments(type, arguments)
+            elif type.type == Type.DICT:
+                result = self._handle_dict_type_arguments(type, arguments)
+        else:
+            raise InterpreterError(message=f"Can't initialize class with type: {type.type}")
+        self._last_result = result
+
+    def _handle_element_type_arguments(self, type: 'ElementType', arguments: ['Expression']) -> Value:
+        element_type = type.element_type
+        results = list()
+        for argument in arguments:
+            argument.accept(self)
+            result = self._last_result
+            if result.type.type == element_type:
+                results.append(result.value)
+            else:
+                raise InterpreterError(message=f"Element type takes values type: {type.element_type}, not: {result.type}")
+        return Value(type, results)
+
+    def _handle_pair_type_arguments(self, type: 'KeyValueType', arguments: ['Expression']) -> Value:
+        key_type = type.key_type
+        value_type = type.value_type
+        if len(arguments) != 2:
+            raise InterpreterError(message=f"Pair type takes 0 or 2 positional arguments, not {len(arguments)}")
+        arguments[0].accept(self)
+        key_value = self._last_result
+        if key_value.type.type != key_type:
+            raise InterpreterError(message=f"Key should be type {key_type}, not {key_value.type}")
+        arguments[0].accept(self)
+        element_value = self._last_result
+        if element_value.type.type != value_type:
+            raise InterpreterError(message=f"Key should be type {key_type}, not {key_value.type}")
+        value = dict()
+        value[key_value.value] = element_value.value
+        return Value(type, value)
+
+    def _handle_dict_type_arguments(self, type: 'KeyValueType', arguments: ['Expression']) -> Value:
+        dictionary = dict()
+        for argument in arguments:
+            argument.accept(self)
+            result = self._last_result
+            if result.type != KeyValueType(Type.PAIR, type.key_type, type.value_type):
+                raise InterpreterError(message=f"Element should be type: {type.type} [ {type.key_type} : {type.value_type} ]")
+            if not isinstance(result.value, dict):
+                raise InterpreterError(message=f"Element given as Dict Initialization argument should be pair value")
+            key = result.value.keys()[0]
+            value = result.value[key]
+            if key in dictionary.keys():
+                raise InterpreterError(message=f"Can't add {key} to Dict - already has this key")
+            dictionary[key] = value
+        return Value(type, dictionary)
 
     def visit_or_expression(self, element: 'OrExpression') -> None:
         element.left.accept(self)
@@ -392,9 +458,9 @@ class Interpreter(Visitor):
         left, right = self._get_left_and_right_element(element)
         if {left.type, right.type} == {BaseType(Type.INT), BaseType(Type.FLOAT)} or left.type == right.type == BaseType(
                 Type.FLOAT):
-            self._last_result = Value(BaseType(Type.FLOAT), left.value + right.value)
+            self._last_result = Value(BaseType(Type.FLOAT), left.value - right.value)
         elif left.type == right.type == BaseType(Type.INT):
-            self._last_result = Value(BaseType(Type.INT), left.value + right.value)
+            self._last_result = Value(BaseType(Type.INT), left.value - right.value)
         else:
             raise InterpreterError(f"Cannot evaluate subtraction expression between objects type: {left.type}"
                                    f" and {right.type}")
@@ -405,14 +471,14 @@ class Interpreter(Visitor):
 
     def visit_negation_expression(self, element: 'NegationExpression') -> None:
         expression = self._get_expression_from_element(element)
-        if expression.type == Type.BOOL:
-            self._last_result = Value(BaseType(Type.FLOAT), not expression)
+        if expression.type == BaseType(Type.BOOL):
+            self._last_result = Value(BaseType(Type.BOOL), not expression)
         else:
             raise InterpreterError(f"Cannot evaluate negation expression with object type: {expression.type}")
 
     def visit_unary_subtraction_expression(self, element: 'UnarySubtractionExpression') -> None:
         expression = self._get_expression_from_element(element)
-        if expression.type <= {BaseType(Type.INT), BaseType(Type.FLOAT)}:
+        if expression.type in {BaseType(Type.INT), BaseType(Type.FLOAT)}:
             self._last_result = Value(expression.type, -expression.value)
         else:
             raise InterpreterError(f"Cannot evaluate unary subtraction expression with object type: {expression.type}")
@@ -450,6 +516,7 @@ class Interpreter(Visitor):
         self._last_result = Value(BaseType(Type.VOID), None)
 
     def visit_function_definition(self, element: 'FunctionDefinition'):
+        self._stop_program_execution()
         block = element.block
         block.accept(self)
         result = self._last_result
@@ -477,7 +544,7 @@ if __name__ == "__main__":
     from src.filter.filter import Filter
     from src.parser.parser import Parser
 
-    text = StringIO("int main() { int a = 1; while( a != 4 ) { if (a == 1) { print(\"Pozdrawiam\"); } else if (a == 2) {print(\"grupę\");} else {print(\"siłownia\");} a = a + 1; } return 0; }")
+    text = StringIO("int main() { List<int> a = new List<int>(1); } string b() { return \"dupa\"; }}")
     scanner = Scanner(text)
     lexer = Lexer(scanner)
     filter = Filter(lexer)
