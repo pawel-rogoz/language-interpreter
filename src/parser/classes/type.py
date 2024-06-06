@@ -1,5 +1,5 @@
-from abc import ABC, abstractmethod
 from enum import Enum, auto
+from typing import Union
 
 
 class BaseType:
@@ -19,13 +19,18 @@ class BaseType:
     def type(self):
         return self._type
 
+    @type.setter
+    def type(self, type: 'Type'):
+        if self._type == Type.UNKNOWN:
+            self._type = type
+
 
 class FunctionType(BaseType):
     pass
 
 
 class KeyValueType(BaseType):
-    def __init__(self, type, key_type, value_type):
+    def __init__(self, type: 'Type', key_type : 'Type', value_type: Union['Type','BaseType']):
         super().__init__(type)
         self._key_type: Type = key_type
         self._value_type: Type = value_type
@@ -37,12 +42,22 @@ class KeyValueType(BaseType):
         return f"{self._type} [ {self._key_type} : {self._value_type} ]"
 
     @property
-    def key_type(self):
+    def key_type(self) -> 'Type':
         return self._key_type
+
+    @key_type.setter
+    def key_type(self, type: 'Type'):
+        if self._key_type == Type.UNKNOWN:
+            self._key_type = type
 
     @property
     def value_type(self):
         return self._value_type
+
+    @value_type.setter
+    def value_type(self, type: 'Type'):
+        if self._value_type == Type.UNKNOWN:
+            self._value_type = type
 
 
 class ElementType(BaseType):
@@ -60,6 +75,11 @@ class ElementType(BaseType):
     def element_type(self):
         return self._element_type
 
+    @element_type.setter
+    def element_type(self, type: Union['Type', 'BaseType']):
+        if self._element_type == Type.UNKNOWN:
+            self._element_type = type
+
 
 class Type(Enum):
     VOID = auto()
@@ -70,3 +90,6 @@ class Type(Enum):
     PAIR = auto()
     LIST = auto()
     DICT = auto()
+    UNKNOWN = auto()
+
+
