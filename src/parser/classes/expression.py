@@ -1,19 +1,29 @@
 from abc import ABC, abstractmethod
 
-from src.interpreter.visitor import Visitor
-from src.interpreter.component import Component
+from src.scanner.position import Position
 
 from src.parser.classes.type import Type, BaseType
 
+from src.interpreter.visitor import Visitor
+from src.interpreter.component import Component
+
 
 class Expression(Component):
+    def __init__(self, position: Position):
+        self._position = position
+
+    @property
+    def position(self) -> Position:
+        return self._position
+
     @abstractmethod
-    def __init__(self):
+    def accept(self, visitor: 'Visitor') -> None:
         pass
 
 
 class BinaryExpression(Expression):
-    def __init__(self, left: Expression, right: Expression = None):
+    def __init__(self, left: Expression, right: Expression, position: Position):
+        super().__init__(position)
         self._left = left
         self._right = right
 
@@ -31,7 +41,8 @@ class BinaryExpression(Expression):
 
 
 class UnaryExpression(Expression):
-    def __init__(self, expression: Expression):
+    def __init__(self, expression: Expression, position: Position):
+        super().__init__(position)
         self._expression = expression
 
     @property
@@ -44,8 +55,8 @@ class UnaryExpression(Expression):
 
 
 class CastingExpression(UnaryExpression, Component):
-    def __init__(self, expression, type: BaseType = None):
-        super().__init__(expression)
+    def __init__(self, expression, type: BaseType, position: Position):
+        super().__init__(expression, position)
         self._type = type
 
     @property
@@ -57,8 +68,8 @@ class CastingExpression(UnaryExpression, Component):
 
 
 class IndexingExpression(UnaryExpression, Component):
-    def __init__(self, expression, index: Expression):
-        super().__init__(expression)
+    def __init__(self, expression, index: Expression, position: Position):
+        super().__init__(expression, position)
         self._index = index
 
     @property
@@ -70,7 +81,8 @@ class IndexingExpression(UnaryExpression, Component):
 
 
 class LiteralExpression(Expression, Component):
-    def __init__(self, type, value):
+    def __init__(self, type, value, position: Position):
+        super().__init__(position)
         self._type: Type = type
         self._value = value
 
@@ -104,7 +116,8 @@ class IdOrCallExpression(BinaryExpression, Component):
 
 
 class IdExpression(Expression, Component):
-    def __init__(self, id: str):
+    def __init__(self, id: str, position: Position):
+        super().__init__(position)
         self._id = id
 
     @property
@@ -116,7 +129,8 @@ class IdExpression(Expression, Component):
 
 
 class FunctionCallExpression(Expression, Component):
-    def __init__(self, id: str, arguments: [Expression]):
+    def __init__(self, id: str, arguments: [Expression], position: Position):
+        super().__init__(position)
         self._id = id
         self._arguments = arguments
 
@@ -128,20 +142,26 @@ class FunctionCallExpression(Expression, Component):
     def arguments(self) -> [Expression]:
         return self._arguments
 
+    @arguments.setter
+    def arguments(self, arguments: [Expression]) -> None:
+        self._arguments = arguments
+
     def accept(self, visitor: Visitor) -> None:
         visitor.visit_function_call_expression(self)
 
 
 class DotCallChildrenExpression(Expression):
-    def accept(self, visitor: 'Visitor') -> None:
-        pass
-
-    def __init__(self, id: str):
+    def __init__(self, id: str, position: Position):
+        super().__init__(position)
         self._id = id
 
     @property
     def id(self):
         return self._id
+
+    @abstractmethod
+    def accept(self, visitor: 'Visitor') -> None:
+        pass
 
 
 class FieldAccessExpression(DotCallChildrenExpression, Component):
@@ -150,8 +170,8 @@ class FieldAccessExpression(DotCallChildrenExpression, Component):
 
 
 class MethodCallExpression(DotCallChildrenExpression, Component):
-    def __init__(self, id: str, arguments: [Expression]):
-        super().__init__(id)
+    def __init__(self, id: str, arguments: [Expression], position: Position):
+        super().__init__(id, position)
         self._arguments = arguments
 
     @property
@@ -163,8 +183,8 @@ class MethodCallExpression(DotCallChildrenExpression, Component):
 
 
 class MethodCallAndFieldAccessExpression(DotCallChildrenExpression, Component):
-    def __init__(self, id: str, arguments: [Expression], index: Expression):
-        super().__init__(id)
+    def __init__(self, id: str, arguments: [Expression], index: Expression, position: Position):
+        super().__init__(id, position)
         self._arguments = arguments
         self._index = index
 
@@ -181,8 +201,8 @@ class MethodCallAndFieldAccessExpression(DotCallChildrenExpression, Component):
 
 
 class IndexAccessExpression(DotCallChildrenExpression, Component):
-    def __init__(self, id: str, index: Expression):
-        super().__init__(id)
+    def __init__(self, id: str, index: Expression, position: Position):
+        super().__init__(id, position)
         self._index = index
 
     @property
@@ -194,8 +214,8 @@ class IndexAccessExpression(DotCallChildrenExpression, Component):
 
 
 class FunctionCallAndIndexExpression(DotCallChildrenExpression, Component):
-    def __init__(self, id: str, arguments: [Expression], index: Expression):
-        super().__init__(id)
+    def __init__(self, id: str, arguments: [Expression], index: Expression, position: Position):
+        super().__init__(id, position)
         self._arguments = arguments
         self._index = index
 
@@ -212,7 +232,8 @@ class FunctionCallAndIndexExpression(DotCallChildrenExpression, Component):
 
 
 class ClassInitializationExpression(Expression, Component):
-    def __init__(self, type, arguments):
+    def __init__(self, type, arguments, position: Position):
+        super().__init__(position)
         self._type: Type = type
         self._arguments: list[Expression] = arguments
 
@@ -242,7 +263,9 @@ class AndExpression(BinaryExpression, Component):
 
 
 class RelationExpression(BinaryExpression):
-    pass
+    @abstractmethod
+    def accept(self, visitor: 'Visitor') -> None:
+        pass
 
 
 class GreaterExpression(RelationExpression, Component):

@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
+from src.scanner.position import Position
+
 from src.interpreter.component import Component
 
 if TYPE_CHECKING:
@@ -12,13 +14,21 @@ if TYPE_CHECKING:
 
 
 class Statement(Component):
+    def __init__(self, position: Position):
+        self._position = position
+
+    @property
+    def position(self):
+        return self._position
+
     @abstractmethod
-    def __init__(self):
+    def accept(self, visitor: 'Visitor') -> None:
         pass
 
 
 class ReturnStatement(Statement, Component):
-    def __init__(self, expression: 'Expression') -> None:
+    def __init__(self, expression: 'Expression', position: Position) -> None:
+        super().__init__(position)
         self._expression = expression
 
     @property
@@ -30,7 +40,8 @@ class ReturnStatement(Statement, Component):
 
 
 class DeclarationStatement(Statement, Component):
-    def __init__(self, type: 'BaseType', id: str) -> None:
+    def __init__(self, type: 'BaseType', id: str, position: Position) -> None:
+        super().__init__(position)
         self._type = type
         self._id = id
 
@@ -47,8 +58,8 @@ class DeclarationStatement(Statement, Component):
 
 
 class InitializationStatement(DeclarationStatement, Component):
-    def __init__(self, type: 'BaseType', id: str, expression: 'Expression'):
-        super().__init__(type, id)
+    def __init__(self, type: 'BaseType', id: str, expression: 'Expression', position: Position):
+        super().__init__(type, id, position)
         self._expression = expression
 
     @property
@@ -60,7 +71,8 @@ class InitializationStatement(DeclarationStatement, Component):
 
 
 class ExpressionStatement(Statement, Component):
-    def __init__(self, expression: 'Expression'):
+    def __init__(self, expression: 'Expression', position: Position):
+        super().__init__(position)
         self._expression = expression
 
     @property
@@ -72,8 +84,8 @@ class ExpressionStatement(Statement, Component):
 
 
 class AssignmentStatement(ExpressionStatement, Component):
-    def __init__(self, expression: 'Expression', assign_expression: 'Expression'):
-        super().__init__(expression)
+    def __init__(self, expression: 'Expression', assign_expression: 'Expression', position: Position):
+        super().__init__(expression, position)
         self._assign_expression = assign_expression
 
     @property
@@ -85,7 +97,9 @@ class AssignmentStatement(ExpressionStatement, Component):
 
 
 class IfStatement(Statement, Component):
-    def __init__(self, if_part: 'IfPart', else_if_parts: ['ElseIfPart'] = None, else_part: 'ElsePart' = None) -> None:
+    def __init__(self, if_part: 'IfPart',else_if_parts: ['ElseIfPart'] = None,
+                 else_part: 'ElsePart' = None, position: Position = None) -> None:
+        super().__init__(position)
         self._if_part = if_part
         self._else_if_parts = else_if_parts
         self._else_part = else_part
@@ -107,7 +121,8 @@ class IfStatement(Statement, Component):
 
 
 class WhileStatement(Statement, Component):
-    def __init__(self, expression: 'Expression', block: 'Block'):
+    def __init__(self, expression: 'Expression', block: 'Block', position: Position):
+        super().__init__(position)
         self._expression = expression
         self._block = block
 
