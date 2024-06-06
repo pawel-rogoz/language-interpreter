@@ -1,0 +1,35 @@
+int main()
+{
+    // komentarz
+    int a = 1;
+    bool b = true;
+    float c = 3.5;
+    string d = "string";
+    List<int> lista = new List<int>(1,2,3);
+    Pair<string,int> para = new Pair<string,int>("a", 10);
+    Dict<string,int> slownik = new Dict<string,int>(para);
+    //printDict(slownik);
+    printPair(para);
+    //printList(lista);
+    return 0;
+}
+
+void printNumber(int number)
+{
+    print((string) number);
+}
+
+void printPair(Pair<string,int> para)
+{
+    print(para.key() + " " + (string) para.value());
+}
+
+void printDict(Dict<string,int> dict)
+{
+    dict.forEach(printPair());
+}
+
+void printList(List<int> lista)
+{
+    lista.forEach(printNumber());
+}
