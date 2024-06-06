@@ -15,3 +15,27 @@ class InterpreterError(Exception):
         if self.position:
             message += f", at line {self.position.line}, column: {self.position.column}"
         return message
+
+
+class DivisionError(InterpreterError):
+    pass
+
+
+class ReturnTypeError(InterpreterError):
+    pass
+
+
+class MainNotImplementedError(InterpreterError):
+    pass
+
+
+class ExpressionTypeError(InterpreterError):
+    pass
+
+
+class InitializationError(InterpreterError):
+    pass
+
+
+class AssignmentError(InterpreterError):
+    pass

@@ -1,0 +1,27 @@
+int main()
+{
+    List<int> lista = new List<int>(1,2,3,4,5);
+    List<int> lista2 = lista.select(razyCztery()).where(isBiggerThan12()).orderBy(orderDescending());
+    lista2.forEach(printNumber());
+    return 0;
+}
+
+int orderDescending(int number)
+{
+    return -number;
+}
+
+bool isBiggerThan12(int number)
+{
+    return number > 12;
+}
+
+int razyCztery(int number)
+{
+    return number * 4;
+}
+
+void printNumber(int number)
+{
+    print((string) number);
+}

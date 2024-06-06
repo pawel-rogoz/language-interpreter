@@ -41,6 +41,9 @@ class KeyValueType(BaseType):
     def __str__(self):
         return f"{self._type} [ {self._key_type} : {self._value_type} ]"
 
+    def __hash__(self):
+        return hash((self._type, self._key_type, self._value_type))
+
     @property
     def key_type(self) -> 'Type':
         return self._key_type
@@ -70,6 +73,9 @@ class ElementType(BaseType):
 
     def __str__(self):
         return f"{self._type} [{self._element_type}]"
+
+    def __hash__(self):
+        return hash((self._type, self._element_type))
 
     @property
     def element_type(self):
