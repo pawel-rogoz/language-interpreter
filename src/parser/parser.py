@@ -11,7 +11,6 @@ from src.parser.classes.program import Program
 from src.parser.classes.function_definition import FunctionDefinition
 from src.parser.classes.parameter import Parameter
 from src.parser.classes.block import Block
-from src.parser.classes.linq_expression import LINQExpression, OrderByOption
 
 from src.parser.classes.expression import Expression, GreaterExpression, GreaterEqualExpression, LessExpression, \
     LessEqualExpression, EqualExpression, NotEqualExpression, AdditionExpression, SubtractionExpression, \
@@ -67,11 +66,6 @@ class Parser(ParserInterface):
         TokenType.STRING_VALUE: Type.STRING,
         TokenType.BOOL_VALUE: Type.BOOL,
         TokenType.FLOAT_VALUE: Type.FLOAT
-    }
-
-    order_token_to_order_option = {
-        TokenType.ASC: OrderByOption.ASC,
-        TokenType.DESC: OrderByOption.DESC
     }
 
     relation_operators = {
