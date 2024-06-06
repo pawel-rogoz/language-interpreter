@@ -10,3 +10,11 @@ class Parameter:
     @property
     def id(self):
         return self._id
+
+
+class ThisParameter(Parameter):
+    pass
+
+
+class FunctionParameter(Parameter):
+    pass
