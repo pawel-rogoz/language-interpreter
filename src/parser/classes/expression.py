@@ -9,7 +9,7 @@ from src.interpreter.component import Component
 
 
 class Expression(Component):
-    def __init__(self, position: Position):
+    def __init__(self, position: Position = Position(1, 1)):
         self._position = position
 
     @property
@@ -22,7 +22,7 @@ class Expression(Component):
 
 
 class BinaryExpression(Expression):
-    def __init__(self, left: Expression, right: Expression, position: Position):
+    def __init__(self, left: Expression, right: Expression, position: Position = Position(1, 1)):
         super().__init__(position)
         self._left = left
         self._right = right
@@ -41,7 +41,7 @@ class BinaryExpression(Expression):
 
 
 class UnaryExpression(Expression):
-    def __init__(self, expression: Expression, position: Position):
+    def __init__(self, expression: Expression, position: Position = Position(1, 1)):
         super().__init__(position)
         self._expression = expression
 
@@ -55,7 +55,7 @@ class UnaryExpression(Expression):
 
 
 class CastingExpression(UnaryExpression, Component):
-    def __init__(self, expression, type: BaseType, position: Position):
+    def __init__(self, expression, type: BaseType, position: Position = Position(1, 1)):
         super().__init__(expression, position)
         self._type = type
 
@@ -68,7 +68,7 @@ class CastingExpression(UnaryExpression, Component):
 
 
 class IndexingExpression(UnaryExpression, Component):
-    def __init__(self, expression, index: Expression, position: Position):
+    def __init__(self, expression, index: Expression, position: Position = Position(1, 1)):
         super().__init__(expression, position)
         self._index = index
 
@@ -81,7 +81,7 @@ class IndexingExpression(UnaryExpression, Component):
 
 
 class LiteralExpression(Expression, Component):
-    def __init__(self, type, value, position: Position):
+    def __init__(self, type, value, position: Position = Position(1, 1)):
         super().__init__(position)
         self._type: Type = type
         self._value = value
@@ -116,7 +116,7 @@ class IdOrCallExpression(BinaryExpression, Component):
 
 
 class IdExpression(Expression, Component):
-    def __init__(self, id: str, position: Position):
+    def __init__(self, id: str, position: Position = Position(1, 1)):
         super().__init__(position)
         self._id = id
 
@@ -129,7 +129,7 @@ class IdExpression(Expression, Component):
 
 
 class FunctionCallExpression(Expression, Component):
-    def __init__(self, id: str, arguments: [Expression], position: Position):
+    def __init__(self, id: str, arguments: [Expression], position: Position = Position(1, 1)):
         super().__init__(position)
         self._id = id
         self._arguments = arguments
@@ -151,7 +151,7 @@ class FunctionCallExpression(Expression, Component):
 
 
 class DotCallChildrenExpression(Expression):
-    def __init__(self, id: str, position: Position):
+    def __init__(self, id: str, position: Position = Position(1, 1)):
         super().__init__(position)
         self._id = id
 
@@ -170,7 +170,7 @@ class FieldAccessExpression(DotCallChildrenExpression, Component):
 
 
 class MethodCallExpression(DotCallChildrenExpression, Component):
-    def __init__(self, id: str, arguments: [Expression], position: Position):
+    def __init__(self, id: str, arguments: [Expression], position: Position = Position(1, 1)):
         super().__init__(id, position)
         self._arguments = arguments
 
@@ -183,7 +183,7 @@ class MethodCallExpression(DotCallChildrenExpression, Component):
 
 
 class MethodCallAndFieldAccessExpression(DotCallChildrenExpression, Component):
-    def __init__(self, id: str, arguments: [Expression], index: Expression, position: Position):
+    def __init__(self, id: str, arguments: [Expression], index: Expression, position: Position = Position(1, 1)):
         super().__init__(id, position)
         self._arguments = arguments
         self._index = index
@@ -201,7 +201,7 @@ class MethodCallAndFieldAccessExpression(DotCallChildrenExpression, Component):
 
 
 class IndexAccessExpression(DotCallChildrenExpression, Component):
-    def __init__(self, id: str, index: Expression, position: Position):
+    def __init__(self, id: str, index: Expression, position: Position = Position(1, 1)):
         super().__init__(id, position)
         self._index = index
 
@@ -214,7 +214,7 @@ class IndexAccessExpression(DotCallChildrenExpression, Component):
 
 
 class FunctionCallAndIndexExpression(DotCallChildrenExpression, Component):
-    def __init__(self, id: str, arguments: [Expression], index: Expression, position: Position):
+    def __init__(self, id: str, arguments: [Expression], index: Expression, position: Position = Position(1, 1)):
         super().__init__(id, position)
         self._arguments = arguments
         self._index = index
@@ -232,7 +232,7 @@ class FunctionCallAndIndexExpression(DotCallChildrenExpression, Component):
 
 
 class ClassInitializationExpression(Expression, Component):
-    def __init__(self, type, arguments, position: Position):
+    def __init__(self, type, arguments, position: Position = Position(1, 1)):
         super().__init__(position)
         self._type: Type = type
         self._arguments: list[Expression] = arguments
