@@ -9,14 +9,6 @@ class TokenType(Enum):
     RETURN = auto()
     NEW = auto()
 
-    # LINQ KEYWORDS
-    SELECT = auto()
-    WHERE = auto()
-    FROM = auto()
-    ORDER_BY = auto()
-    ASC = auto()
-    DESC = auto()
-
     # TYPES
     VOID = auto()
     INT = auto()
