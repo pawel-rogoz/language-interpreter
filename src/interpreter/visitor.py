@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from src.parser.classes.block import Block
     from src.parser.classes.statement import (ReturnStatement, DeclarationStatement, InitializationStatement,
                                               ExpressionStatement, AssignmentStatement, IfStatement, WhileStatement)
-    from src.parser.classes.expression import (CastingExpression, IndexingExpression, LiteralExpression, CallExpression,
+    from src.parser.classes.expression import (CastingExpression, IndexingExpression, LiteralExpression,
                                                IdOrCallExpression, IdExpression, FunctionCallExpression,
                                                FieldAccessExpression, MethodCallExpression,
                                                MethodCallAndFieldAccessExpression, IndexAccessExpression,
@@ -17,8 +17,12 @@ if TYPE_CHECKING:
                                                MultiplicationExpression, DivisionExpression, AdditionExpression,
                                                SubtractionExpression, DotCallExpression, NegationExpression,
                                                UnarySubtractionExpression, TermExpression)
-    from src.parser.classes.linq_expression import LINQExpression
-    from src.interpreter.embedded_functions import PrintFunctionDefinition
+    from src.interpreter.embedded_functions import (PrintFunctionDefinition, ValueFunctionDefinition,
+                                                    KeyFunctionDefinition, KeysFunctionDefinition, ValuesFunctionDefinition,
+                                                    AddFunctionDefinition, IsKeyFunctionDefinition, LengthFunctionDefinition,
+                                                    PushFunctionDefinition, PopFunctionDefinition, RemoveFunctionDefinition,
+                                                    ForEachFunctionDefinition, WhereFunctionDefinition,
+                                                    SelectFunctionDefinition, OrderByFunctionDefinition)
 
 
 class Visitor(ABC):
@@ -175,9 +179,61 @@ class Visitor(ABC):
         pass
 
     @abstractmethod
-    def visit_linq_expression(self, element: 'LINQExpression'):
+    def visit_print_function(self, element: 'PrintFunctionDefinition'):
         pass
 
     @abstractmethod
-    def visit_print_function(self, element: 'PrintFunctionDefinition'):
+    def visit_value_function(self, element: 'ValueFunctionDefinition'):
+        pass
+
+    @abstractmethod
+    def visit_key_function(self, element: 'KeyFunctionDefinition'):
+        pass
+
+    @abstractmethod
+    def visit_keys_function(self, element: 'KeysFunctionDefinition'):
+        pass
+
+    @abstractmethod
+    def visit_values_function(self, element: 'ValuesFunctionDefinition'):
+        pass
+
+    @abstractmethod
+    def visit_add_function(self, element: 'AddFunctionDefinition'):
+        pass
+
+    @abstractmethod
+    def visit_is_key_function(self, element: 'IsKeyFunctionDefinition'):
+        pass
+
+    @abstractmethod
+    def visit_length_function(self, element: 'LengthFunctionDefinition'):
+        pass
+
+    @abstractmethod
+    def visit_push_function(self, element: 'PushFunctionDefinition'):
+        pass
+
+    @abstractmethod
+    def visit_pop_function(self, element: 'PopFunctionDefinition'):
+        pass
+
+    @abstractmethod
+    def visit_remove_function(self, element: 'RemoveFunctionDefinition'):
+        pass
+
+    @abstractmethod
+    def visit_for_each_function(self, element: 'ForEachFunctionDefinition'):
+        pass
+
+    @abstractmethod
+    def visit_where_function(self, element: 'WhereFunctionDefinition'):
+        pass
+
+    @abstractmethod
+    def visit_select_function(self, element: 'SelectFunctionDefinition'):
+        pass
+
+    @abstractmethod
+    def visit_orderby_function(self, element: 'OrderByFunctionDefinition'):
         pass
