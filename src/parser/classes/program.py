@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+from src.scanner.position import Position
+
 from src.interpreter.component import Component
 
 if TYPE_CHECKING:
@@ -10,10 +12,15 @@ if TYPE_CHECKING:
 class Program(Component):
     def __init__(self, functions: dict[str, 'FunctionDefinition']):
         self._functions = functions
+        self._position = Position(1, 0)
 
     @property
     def functions(self) -> dict[str, 'FunctionDefinition']:
         return self._functions
+
+    @property
+    def position(self) -> Position:
+        return self._position
 
     def get_functions(self) -> dict[str, 'FunctionDefinition']:
         return self._functions
