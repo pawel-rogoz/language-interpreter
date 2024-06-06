@@ -185,20 +185,6 @@ int main()
 ERROR: Can't cast string to int, at line 4, column 20
 ```
 
-* Operacje LINQ - przypisanie do zmiennej nieodpowiedniego typu
-```
-int main()
-{
-    List<int> liczby = new List(0,1,2,3);
-
-    int wiekszeOdJednego = select liczba where liczba > 1 from liczby;
-}
-```
-
-```
-ERROR: Can't assign 'List' to 'int', at line 5, column 25
-```
-
 * Brak średnika
 ```
 int main()
@@ -214,7 +200,7 @@ ERROR: ';' expected, at line 3, column 20
 #### Przykładowe kody źródłowe
 * Podstawowe operacje
 ```
-void wypiszPare(Pair<string,int> para)
+void wypiszPanstwo(Pair<string,string> para)
 {
     print("Klucz: " + para.key() + ", wartość: " + para.value());
 }
@@ -342,54 +328,102 @@ int main()
 }
 ```
 
-* Operacje LINQ - WHERE, List
-Operacje LINQ można używać tylko do przypisania wartości do zmiennej. Użycie słów kluczowych WHERE, oraz ORDERBY jest opcjonalne, w przeciwieństwie do SELECT i FROM. Operacja zwraca wszystkie elementy spełniające podany warunek
+* Operacje LINQ - WHERE
+Operacje LINQ mogą być wywoływane na zmiennych typu: Pair, Dict, List. Jako argument wywołania podajemy tzw. "callback function".
+
+Callback Function jest wywoływane dla kazdego elementu zmiennej (słownik - pary, lista - elementy)
+
+Funkcja podawana jako argument wywołania 'WHERE' musi zwracać wartość typu bool
 ```
 int main()
 {
     List<int> liczby = new List(0,1,2,3);
 
-    List<int> wiekszeOdJeden = select liczba where liczba > 1 from liczby; // 2,3
+    List<int> wiekszeOdJeden = liczby.where(czyWiekszeOd1()); // 2,3
+}
+
+bool czyWiekszeOd1(int liczba)
+{
+  return liczba > 1;
 }
 ```
 
-* Operacje LINQ - ORDER BY, List
-Słowa kluczowe ASC, DESC umożliwiają sortowanie wyników rosnąco / malejąco
+* Operacje LINQ - ORDER BY
+Jako argument wywołania podajemy funkcję zwracającą wartość typu INT, STRING lub BOOL
 ```
 int main()
 {
     List<int> liczby = new List(1, 4, 3, 0, 2);
 
-    List<int> wiekszeOdJeden = select liczba where liczba > 1 orderby liczba ASC from liczby; // 2,3,4
+    List<int> wiekszeOdJeden = liczby.orderBy(sortowanie()); // 4,3,2,1,0
+}
+
+int sortowanie(int liczba)
+{
+  return -liczba; //sortowanie malejąco
 }
 ```
 
-* Operacje LINQ - WHERE, Dict
+* Operacje LINQ - SELECT
+Funkcja podawana jako argument moze zwracać wartość dowolnego typu
 ```
 int main()
 {
-    Pair<string,int> oszczednosciJacka = new Pair("Jacek", 100);
-    Pair<string,int> oszczednosciMarcina = new Pair("Marcin", 250);
-    Pair<string,int> oszczednosciKrzysztofa = new Pair("Krzysztof", 150);
+    Pair<string,string> krajPierwszy = new Pair("Anglia", "Londyn");
+    Pair<string,string> krajDrugi = new Pair("Polska", "Warszawa");
+    Pair<string,string> krajTrzeci = new Pair("Niemcy", "Berlin");
 
-    Dict<string,int> oszczednosci = new Dict(oszczednosciJacka, oszczednosciMarcina, oszczednosciKrzysztofa);
 
-    List<Pair<string,int>> wiekszeOdDwustu = select pair where pair.value() > 200 from oszczednosci; // [("Marcin", 250)]
+    Dict<string,string> stoliceKrajow = new Dict(krajPierwszy, krajDrugi, krajTrzeci);
+
+    List<string> kraje = stoliceKrajow.select(dajKraj()); // "Anglia", "Polska", "Niemcy"
+}
+
+string dajKraj(Pair<string,string> stolicaKraju)
+{
+  return stolicaKraju.key();
 }
 ```
 
-* Operacje LINQ - ORDER BY, Dict
-W przypadku słowników operujemy na umieszczonych w nich parach. Możemy zwracać cała parę lub jej składowe (key, value). Wynik zapytania umieszczony jest w nowej liście
+* Operacje LINQ - SELECT
+Funkcja podawana jako argument moze zwracać wartość dowolnego typu
 ```
 int main()
 {
-    Pair<string,int> oszczednosciJacka = new Pair("Jacek", 100);
-    Pair<string,int> oszczednosciMarcina = new Pair("Marcin", 250);
-    Pair<string,int> oszczednosciKrzysztofa = new Pair("Krzysztof", 150);
+    Pair<string,string> krajPierwszy = new Pair("Anglia", "Londyn");
+    Pair<string,string> krajDrugi = new Pair("Polska", "Warszawa");
+    Pair<string,string> krajTrzeci = new Pair("Niemcy", "Berlin");
 
-    Dict<string,int> oszczednosci = new Dict(oszczednosciJacka, oszczednosciMarcina, oszczednosciKrzysztofa);
 
-    List<Pair<string,int>> wiekszeOdStu = select pair where pair.value() > 200 orderby pair.key() ASC from oszczednosci; // [("Krzysztof", 150), ("Marcin", 250)]
+    Dict<string,string> stoliceKrajow = new Dict(krajPierwszy, krajDrugi, krajTrzeci);
+
+    List<string> kraje = stoliceKrajow.select(dajKraj()); // "Anglia", "Polska", "Niemcy"
+}
+
+string dajKraj(Pair<string,string> stolicaKraju)
+{
+  return stolicaKraju.key();
+}
+```
+
+* Operacja forEach
+Funkcja podawana jako argument moze zwracać wartość dowolnego typu
+```
+int main()
+{
+    Pair<string,string> krajPierwszy = new Pair("Anglia", "Londyn");
+    Pair<string,string> krajDrugi = new Pair("Polska", "Warszawa");
+    Pair<string,string> krajTrzeci = new Pair("Niemcy", "Berlin");
+
+
+    Dict<string,string> stoliceKrajow = new Dict(krajPierwszy, krajDrugi, krajTrzeci);
+
+    stoliceKrajow.forEach(wypiszKraj());
+}
+
+void wypiszKraj(Pair<string,string> stolicaKraju)
+{
+  print(stolicaKraju.key() + " " + stolicaKraju.value());
 }
 ```
 
@@ -427,15 +461,13 @@ additiveTerm = multiplicativeTerm, { ( "+" | "-" ), multiplicativeTerm }
 multiplicativeTerm = unaryApplication, { ( "*" | "/" ), unaryApplication }
 unaryApplication = [ ( "-" | "!" ) ], castingIndexingTerm
 castingIndexingTerm = [ "(", type ,")" ], term, [ "[", expression, "]" ]
-term = literal | idOrCall | "(", expression, ")" | linqOperation
+term = literal | idOrCall | "(", expression, ")"
 
 literal = bool | string | number | floatNumber
 idOrCall = id, [ { [ ".", id ], "(", parameters, ")", } ], [ "[", expression, "]" ]
 classInitialization = "new", className, "(", parameters, ")"
 
 parameters = [ expression, { ",", expression } ]
-
-linqOperation = "from", expression, [ "where", expression ], [ "orderby", expression, ( "ASC", "DESC" ) ], "select", expression, ";"
 
 id = letter, { letter }
 ```
@@ -525,13 +557,6 @@ Rodzaje tokenów:
     * ```From```
     * ```Where```
     * ```New```
-* Operacje LINQ
-    * ```Select```
-    * ```Where```
-    * ```From```
-    * ```OrderBy```
-    * ```ASC```
-    * ```DESC```
 * Typy
     * ```Int```
     * ```Float```
@@ -584,3 +609,28 @@ Struktura interpretera
     * Interpreter - wykonuje instrukcje z drzewa AST
     * metody klasy:
         * interpret() - wykonuje instrukcje z drzewa AST, zwraca wartość z funkcji main lub błędy powstałe przy interpretacji
+
+#### Uruchomienie Interpretera
+1. Pobranie pakietów
+```
+pip install -r requirements.txt
+```
+2. Uruchomienie pliku interpreter z poziomu katalogu głównego:
+#### Argumenty wywołania
+* ścieżka do pliku
+* "-" - podanie tego argumentu umozliwi wpisanie kodu bezpośrednio do okna terminala
+
+   Przykład:
+
+```
+python3 src/interpreter/interpreter.py src/interpreter/code_examples/LINQ.pr
+```
+
+```
+python3 src/interpreter/interpreter.py -
+Enter code: int main() { print("Hello world!"); return 0; }
+Hello world!
+Program exited with value: 0 (Type.INT)
+
+
+```
