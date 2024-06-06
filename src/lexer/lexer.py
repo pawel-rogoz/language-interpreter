@@ -294,8 +294,10 @@ class Lexer:
         if len(id_or_keyword_chars) == 0:
             return None
         elif (result := ''.join(id_or_keyword_chars)) in self.keywords:
-            if result in ['true', 'false']:
-                return Token(TokenType.BOOL_VALUE, position, result)
+            if result == 'true':
+                return Token(TokenType.BOOL_VALUE, position, True)
+            elif result == 'false':
+                return Token(TokenType.BOOL_VALUE, position, False)
             return Token(self.keywords[result], position)
         else:
             return Token(TokenType.ID, position, result)
