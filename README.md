@@ -1,7 +1,24 @@
 # TKOM24L
 Paweł Rogóż
+
 ### Elementy dokumentu
-[[*TOC*]]
+* [Temat projektu:](#temat-projektu)
+    * [Cechy języka:](#cechy-języka)
+* [Założenia:](#założenia)
+  * [Klasa List](#klasa-list)
+  * [Klasa Pair](#klasa-pair)
+  * [Klasa Dict](#klasa-dict)
+* [Sposób uruchomienia](#sposób-uruchomienia)
+* [Obsługa błędów](#obsługa-błędów)
+* [Przykładowe kody źródłowe](#przykładowe-kody-źródłowe)
+* [Formalna specyfikacja i składnia (EBNF):](#formalna-specyfikacja-i-składnia-ebnf)
+   * [Część składniowa](#część-składniowa)
+   * [Część leksykalna](#część-leksykalna)
+* [Priorytety Operatorów](#priorytety-operatorów)
+* [Rzutowanie Typów](#rzutowanie-typów)
+* [Tokeny](#tokeny)
+* [Uruchomienie Interpretera](#uruchomienie-interpretera)
+* [Argumenty wywołania](#argumenty-wywołania)
 
 #### Temat projektu:
 Język z wbudowanym typem słownika z określoną kolejnością elementów. Kolejność elementów w słowniku jest tożsama z kolejnością wstawiania do niego elementów. Możliwe są podstawowe operacje na słowniku (dodawanie, usuwanie, wyszukiwanie elementów wg klucza, sprawdzanie, czy dany klucz znajduje się w słowniku itd.), iterowanie po elementach oraz wykonywanie na słowniku zapytań w stylu LINQ.
